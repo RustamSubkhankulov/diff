@@ -25,16 +25,23 @@ int main(int, char* argv[]) {
 
     #endif
 
-    err_val = diff_execute(&tree); $
+    struct Tree diff = { 0 };
+    err_val = diff_execute(&tree, &diff); $
 
-    err_val = diff_tree_dtor(&tree); $
+    #ifdef DIFF_OUT_TO_FILE
 
-    #ifdef DIFF_READ_FROM_FILE
+        err_val = diff_out_to_file(&diff, argv[3]);
 
-        free(buffer);
+    #else
+
+        err_val = diff_out_to_console(&diff);
 
     #endif
 
+    err_val = diff_tree_dtor(&tree); $
+    err_val = diff_tree_dtor(&diff); $
+
+    free(buffer);
     err_val = close_log_file(); $
 
     return 0;

@@ -4,7 +4,7 @@
 
 int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS) {
 
-    diff_tree_report();
+    diff_log_report();
     TREE_PTR_CHECK(tree);
 
     int ret = tree_ctor(tree);
@@ -39,4 +39,10 @@ char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
 //===================================================================
 
 int _diff_execute(struct Tree* tree, LOG_PARAMS);
+
+//===================================================================
+
+int   _diff_out_to_file(struct Tree* diff, const char* filename, LOG_PARAMS);
+
+int   _diff_out_to_console(struct Tree* diff, LOG_PARAMS);
 

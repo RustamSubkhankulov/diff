@@ -39,15 +39,19 @@
 
 //===================================================================
 
-int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS);
+int   _diff_tree_ctor(struct Tree* tree, LOG_PARAMS);
 
-int _diff_tree_dtor(struct Tree* tree, LOG_PARAMS);
+int   _diff_tree_dtor(struct Tree* tree, LOG_PARAMS);
 
 char* _diff_read_from_file(struct Tree* tree, const char* filename, LOG_PARAMS);
 
 char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
 
-int _diff_execute(struct Tree* tree, LOG_PARAMS);
+int   _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS);
+
+int   _diff_out_to_file(struct Tree* diff, const char* filename, LOG_PARAMS);
+
+int   _diff_out_to_console(struct Tree* diff, LOG_PARAMS);
 
 //===================================================================
 
@@ -63,8 +67,14 @@ int _diff_execute(struct Tree* tree, LOG_PARAMS);
 #define diff_read_from_console(tree) \
        _diff_read_from_console(tree, LOG_ARGS)
 
-#define diff_execute(tree) \
-       _diff_execute(tree, LOG_ARGS)
+#define diff_execute(tree, diff) \
+       _diff_execute(tree, diff, LOG_ARGS)
+
+#define diff_out_to_file(diff, filename) \
+       _diff_out_to_file(diff, filename, LOG_ARGS)
+
+#define diff_out_to_console(diff) \
+       _diff_out_to_comsole(diff, LOG_ARGS)
 
 
 
