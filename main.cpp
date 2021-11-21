@@ -19,11 +19,13 @@ int main(int, char* argv[]) {
 
     #ifdef DIFF_READ_FROM_FILE
 
-        buffer = diff_read_from_file(&tree, argv[2]); $
+        buffer = diff_read_from_file(&tree, argv[2]); 
     #else
-        buffer = diff_read_from_comsole(&tree); &
+        buffer = diff_read_from_comsole(&tree); 
 
     #endif
+    if (buffer == NULL)
+        return -1;
 
     struct Tree diff = { 0 };
     err_val = diff_execute(&tree, &diff); $

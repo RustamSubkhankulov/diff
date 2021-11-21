@@ -18,6 +18,8 @@
 
 #endif
 
+//===================================================================
+
 #ifdef DIFF_TREE_VERIFICATE
 
     #define DIFF_TREE_VERIFICATION(tree) {                          \
@@ -39,6 +41,28 @@
 
 //===================================================================
 
+#define BUFFER_STRUCT_PTR_CHECK(buffer_struct_ptr) {                \
+                                                                    \
+    if (buffer_struct_ptr == NULL) {                                \
+                                                                    \
+        error_report(BUFFER_STRUCT_INV_PTR);                        \
+        return -1;                                                  \
+    }                                                               \
+}
+
+//===================================================================
+
+enum operands {
+
+       add = 43;
+       sub = 45,
+       mul = 42,
+       div = 47,
+       pow = 94
+}
+
+//===================================================================
+
 int   _diff_tree_ctor(struct Tree* tree, LOG_PARAMS);
 
 int   _diff_tree_dtor(struct Tree* tree, LOG_PARAMS);
@@ -52,6 +76,14 @@ int   _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS);
 int   _diff_out_to_file(struct Tree* diff, const char* filename, LOG_PARAMS);
 
 int   _diff_out_to_console(struct Tree* diff, LOG_PARAMS);
+
+int _buffer_struct_init(struct Buffer_struct* buffer_struct, char* buffer, 
+                                           int size, int pos, LOG_PARAMS);
+
+int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struct, 
+                                                                      LOG_PARAMS);
+
+int _buffer_dump(struct Buffer_struct* buffer_struct, LOG_PARAMS);
 
 //===================================================================
 
@@ -76,7 +108,14 @@ int   _diff_out_to_console(struct Tree* diff, LOG_PARAMS);
 #define diff_out_to_console(diff) \
        _diff_out_to_comsole(diff, LOG_ARGS)
 
+#define buffer_struct_init(buffer_struct, buffer, size, pos) \
+       _buffer_struct_init(buffer_struct, buffer, size, pos, LOG_ARGS)
 
+#define buffer_dump(buffer_struct) \
+       _buffer_dump(buffer_struct, LOG_ARGS)
+
+#define node_read_from_buffer(node, buffer_struct) \
+       _node_read_from_buffer(node, buffer_struct, LOG_ARGS)
 
 
 

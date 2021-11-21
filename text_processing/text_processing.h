@@ -38,6 +38,9 @@
 #define text_clear_mem(text, buf) \
 		text_clear_mem_(text, buf, LOG_ARGS);
 
+#define copy_from_file_to_buffer(filename, size_ptr) \
+	   _copy_from_file_to_buffer(filename, size_ptr, LOG_ARGS)
+
 //===================================================================
 
 /// Structure contains string as char* and its length
@@ -151,3 +154,5 @@ int text_clear_mem_(struct Text* text, char* buf, LOG_PARAMS);
 int string_null_carriage_return(char* string);
 
 int replace_nulls_with_spaces(char* buffer, long size);
+
+char* _copy_from_file_to_buffer(const char* filename, int* size, LOG_PARAMS);

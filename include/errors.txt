@@ -508,3 +508,5 @@ Invalid data_type of node)
 DEF_ERR(818, OPER_NO_SONS,
 Operand node with no sons)
 
+DEF_ERR(819, INV_VAR_NAME,
+Invalid name of the variable)

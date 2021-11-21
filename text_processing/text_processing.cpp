@@ -104,6 +104,48 @@ char* text_init(const char* filename, struct Text* text, LOG_PARAMS) {
 }
 
 //============================================================================
+
+char* _copy_from_file_to_buffer(const char* filename, int* size_ptr, LOG_PARAMS) {
+
+	text_log_report();
+
+	if (filename == NULL) {
+
+		error_report(INV_FILE_NAME);
+		return NULL;
+	}
+
+	FILE* fp = fopen(filename, "rb");
+	if (fp == NULL) {
+
+		error_report(FOPEN_ERROR);
+		return NULL;
+	}
+	
+	long size = file_size_(fp);
+	if (size < -1)
+		return NULL;
+
+	char* buf = copy_data_to_buf(size, fp, LOG_ARGS);
+
+	fclose(fp);
+
+	#ifdef LOGS
+		fprintf(log_file, "File %s copied to buffer. Size of copied data is %ld.\n\n",
+																		    filename,
+																		 text->size);
+	#endif
+
+	int ret = replace_nulls_with_spaces(buf, size);
+	if (ret == -1)
+		return NULL;
+
+	*size_ptr = size
+	return buf;
+}
+
+//============================================================================
+
 char* file_to_buf_copy(const char* filename, struct Text* text, LOG_PARAMS) {
 
 	text_log_report();
@@ -112,8 +154,11 @@ char* file_to_buf_copy(const char* filename, struct Text* text, LOG_PARAMS) {
 	assert(text != NULL);
 
 	FILE* fp = fopen(filename, "rb");
-	if (fp == NULL) 
+	if (fp == NULL) {
+
+		error_report(FOPEN_ERROR);
 		return NULL;
+	}
 	
 	text->size = file_size_(fp);
 	if (text->size < -1)

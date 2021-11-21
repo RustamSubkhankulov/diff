@@ -712,6 +712,13 @@ int _tree_validator(struct Tree* tree, LOG_PARAMS) {
 
 //===================================================================
 
+static int is_ok_var_name(char var) {
+
+    return (var < 97 || var > 122)? 0: 1;
+}
+
+//===================================================================
+
 int _node_validator(struct Node* node, LOG_PARAMS) {
 
     tree_log_report();
@@ -721,6 +728,12 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
     && (node->left_son == NULL && node->right_son == NULL)) {
 
         error_report(OPER_NO_SONS);
+        return -1;
+    }
+
+    if (node->data_type == variable && !is_ok_var_name(node->data.variable)) {
+
+        error_report(INV_VAR_NAME);
         return -1;
     }
 
