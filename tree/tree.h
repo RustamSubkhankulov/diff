@@ -5,20 +5,32 @@
 
 //===================================================================
 
+union Data {
+
+    double constant;
+    char variable;
+    char operand;
+};
+
+//===================================================================
+
 struct Node {
 
-    elem_t data;
-
-    #ifdef TREE_CALCULATE_HASH_FROM_DATA
-
-        int64_t hash;
-        
-    #endif
+    union Data data;
 
     struct Node* left_son;
     struct Node* right_son;
 
-    bool special_flag;
+    int data_type;
+};
+
+//===================================================================
+
+enum data_types {
+
+    constant = 111,
+    variable = 222,
+    operand  = 333
 };
 
 //===================================================================
@@ -34,10 +46,7 @@ struct Tree {
 struct Node_dot {
 
     FILE* graph;
-
     int father;
-    int depth;
-    int is_left;
 };
 
 //===================================================================
@@ -71,20 +80,17 @@ struct Buffer_struct {
 
 #else
 
-    #define TREE_VERIFICATION(tree) {                                   \
-                                                                        \
-        do                                                              \
-        {                                                               \
-            int is_ok = tree_validator(tree);                           \
-            if (is_ok == -1)                                            \
-                return -1;                                              \
-        } while(0);                                                     \
+    #define TREE_VERIFICATION(tree) {                               \
+                                                                    \
+        do                                                          \
+        {                                                           \
+            int is_ok = tree_validator(tree);                       \
+            if (is_ok == -1)                                        \
+                return -1;                                          \
+        } while(0);                                                 \
     }
 
 #endif
-
-//===================================================================
-
 
 //===================================================================
 
@@ -126,7 +132,7 @@ int _tree_save_to_file(struct Tree* tree, const char* filename, LOG_PARAMS);
 int _node_save_to_file(struct Node* node, FILE* output, LOG_PARAMS);
 
 int _node_dot_fill(struct Node_dot* node_dot, FILE* graph_output, 
-                  int father, int depth, int is_left, LOG_PARAMS);
+                                         int father, LOG_PARAMS);
 
 int _tree_clear_check(struct Tree* tree, LOG_PARAMS);
 
@@ -153,7 +159,7 @@ int _node_add_sons(struct Node* node, LOG_PARAMS);
 
 void* _node_allocate_memory(LOG_PARAMS);
 
-int _node_init(struct Node* node, elem_t value, LOG_PARAMS);
+// int _node_init(struct Node* node, elem_t value, LOG_PARAMS);
 
 int _tree_free_memory(struct Tree* tree, LOG_PARAMS);
 
@@ -177,7 +183,20 @@ int _tree_cleaning(struct Tree* tree, LOG_PARAMS);
 
 int _graph_call_dot(LOG_PARAMS);
 
+int _print_node_data(struct Node* node, FILE* output, LOG_PARAMS);
+
+int _print_node_data_type(struct Node* node, FILE* output, LOG_PARAMS);
+
+int _node_init_constant(struct Node* node, double value, LOG_PARAMS);
+
+int _node_init_variable(struct Node* node, char var, LOG_PARAMS);
+
+int _node_init_operand(struct Node* node, char oper, LOG_PARAMS);
+
 //===================================================================
+
+#define print_node_data_type(node, output) \
+       _print_node_data_type(node, output, LOG_ARGS)
 
 #define node_save_to_file(node, output) \
        _node_save_to_file(node, output, LOG_ARGS)
@@ -185,8 +204,8 @@ int _graph_call_dot(LOG_PARAMS);
 #define tree_save_to_file(tree, filename) \
        _tree_save_to_file(tree, filename, LOG_ARGS)
 
-#define node_dot_fill(node_dot, grapg_output, father, depth, is_left) \
-       _node_dot_fill(node_dot, grapg_output, father, depth, is_left, LOG_ARGS)
+#define node_dot_fill(node_dot, grapg_output, father) \
+       _node_dot_fill(node_dot, grapg_output, father, LOG_ARGS)
 
 #define graph_call_dot() \
        _graph_call_dot(LOG_ARGS)
@@ -251,13 +270,15 @@ int _graph_call_dot(LOG_PARAMS);
 #define node_add_sons(node) \
        _node_add_sons(node, LOG_ARGS)
 
-#define node_init(node, value) \
-       _node_init(node, value, LOG_ARGS)
+//#define node_init(node, value) _node_init(node, value, LOG_ARGS)
 
 #define tree_delete_branch(node_ptr) \
        _tree_delete_branch(node_ptr, LOG_ARGS)
 
 #define node_delete_branch(node) \
-       _node_delete_branch(node, LOG_ARGS);                         
+       _node_delete_branch(node, LOG_ARGS);           
+
+#define print_node_data(node, output) \
+       _print_node_data(node, output, LOG_ARGS)              
 
 //===================================================================

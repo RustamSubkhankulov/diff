@@ -502,3 +502,9 @@ Akinator error during read from console)
 DEF_ERR(816, AKINATOR_MAX_NEW_OBJECTS,
 Number of new objects in akinator reached maximum. Save tree and reboot akinator)
 
+DEF_ERR(817, DIFF_INV_DATA_TYPE,
+Invalid data_type of node)
+
+DEF_ERR(818, OPER_NO_SONS,
+Operand node with no sons)
+

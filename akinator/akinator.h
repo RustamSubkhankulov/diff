@@ -44,6 +44,7 @@ struct Compare_obj {
             int is_ok = akinator_tree_validator(tree);              \
             if (is_ok == -1)                                        \
                 return -1;                                          \
+                                                                    \
         } while(0);                                                 \
     }                                           
 

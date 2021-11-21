@@ -2,26 +2,13 @@
 
 #include <cstddef>
 
-#define TEMP_DIR "/tmp/"
+#include "../diff/diff_config.h"
 
 //===================================================================
 
  const int Dir_name_size = 100;
 
  const int System_cmnd_buf_size = 200;
-
-//===================================================================
-
-//TREE PARAMETERS
-
-//Element type of the list structure
-typedef const char * elem_t;
-
-//Name of type using in list(for logs)
-#define TYPE_NAME "const char*"
-
-//Specificator for type using in list
-#define ELEM_SPEC "%s"
 
 //===================================================================
 
