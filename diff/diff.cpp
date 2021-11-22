@@ -533,8 +533,23 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
     TREE_PTR_CHECK(tree);
     TREE_PTR_CHECK(diff);
 
+    int ret = node_diff_execute(tree->root, diff->root);
+    if (ret == -1)
+        return -1;
+
     return 0;
 }
+
+//===================================================================
+
+int _node_diff_execute(struct Node* node, struct Node* diff_node, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(node);
+    NODE_PTR_CHECK(diff_node);
+    
+
+    return 0;
 
 //===================================================================
 

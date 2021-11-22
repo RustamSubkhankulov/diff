@@ -69,19 +69,17 @@ const char Operands[Operands_number] = {ADD, SUB, MUL, DIV, POW};
 
 //===================================================================
 
-int   _diff_tree_ctor(struct Tree* tree, LOG_PARAMS);
+int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS);
 
-int   _diff_tree_dtor(struct Tree* tree, LOG_PARAMS);
+int _diff_tree_dtor(struct Tree* tree, LOG_PARAMS);
 
-char* _diff_read_from_file(struct Tree* tree, const char* filename, LOG_PARAMS);
+int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS);
 
-char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
+int _node_diff_execute(struct Node* node, struct Node* diff_node, LOG_PARAMS);
 
-int   _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS);
+int _diff_out_to_file(struct Tree* diff, const char* filename, LOG_PARAMS);
 
-int   _diff_out_to_file(struct Tree* diff, const char* filename, LOG_PARAMS);
-
-int   _diff_out_to_console(struct Tree* diff, LOG_PARAMS);
+int _diff_out_to_console(struct Tree* diff, LOG_PARAMS);
 
 int _buffer_struct_init(struct Buffer_struct* buffer_struct, char* buffer, 
                                            int size, int pos, LOG_PARAMS);
@@ -90,6 +88,10 @@ int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struc
                                                                       LOG_PARAMS);
 
 int _buffer_dump(struct Buffer_struct* buffer_struct, LOG_PARAMS);
+
+char* _diff_read_from_file(struct Tree* tree, const char* filename, LOG_PARAMS);
+
+char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
 
 //===================================================================
 
@@ -107,6 +109,9 @@ int _buffer_dump(struct Buffer_struct* buffer_struct, LOG_PARAMS);
 
 #define diff_execute(tree, diff) \
        _diff_execute(tree, diff, LOG_ARGS)
+
+#define node_diff_execute(node, diff_node) \
+       _node_diff_execute(node, diff_node, LOG_ARGS)
 
 #define diff_out_to_file(diff, filename) \
        _diff_out_to_file(diff, filename, LOG_ARGS)

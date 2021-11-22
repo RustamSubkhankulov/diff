@@ -82,7 +82,7 @@ int _print_node_data(struct Node* node, FILE* output, LOG_PARAMS) {
 
         case CONSTANT: {
 
-            fprintf(output, "%lf", node->data.constant);
+            fprintf(output, "%g", node->data.constant);
             break;
         }
 
