@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <ctype.h>
+
 #include "diff.h"
 #include "../text_processing/text_processing.h"
 #include "../general/general.h"
@@ -45,14 +48,22 @@ char* _diff_read_from_file(struct Tree* tree, const char* filename, LOG_PARAMS) 
     }
 
     int size = 0;
+
     char* buffer = copy_from_file_to_buffer(filename, &size);
     if (buffer == NULL)
         return NULL;
 
     struct Buffer_struct buffer_struct = { 0 };
-    buffer_struct_init(&biffer_struct, buffer, size, 0);
+    buffer_struct_init(&buffer_struct, buffer, size, 0);
 
-    return node_read_from_buffer(tree->root, &buffer_struct);
+    int ret = node_read_from_buffer(tree->root, &buffer_struct);
+    if (ret == -1) {
+
+        free(buffer);
+        return NULL;
+    }
+    
+    return buffer;
 }
 
 //===================================================================
@@ -77,12 +88,12 @@ int _buffer_dump(struct Buffer_struct* buffer_struct, LOG_PARAMS) {
                                   " border-collapse: collapse;}\n</style>");
 
     fprintf(logs_file, "<table width = \" 100%% \" "
-                              "cellspacing=\"0\" "
-                              "cellpadding=\"4\" "
-                              "border = \"5\" "
-                              "style = \" "
-                              "padding: 15px; "
-                              "background-color: lightgrey;>\"\n");
+                                  " cellspacing=\"0\" "
+                                  " cellpadding=\"4\" "
+                                  " border = \"5\" "
+                                  " style = \" "
+                                  " padding: 15px; "
+                                  " background-color: lightgrey;>\"\n");
 
     int counter = 0;
     while (counter < size) {
@@ -149,105 +160,88 @@ int _buffer_struct_init(struct Buffer_struct* buffer_struct, char* buffer,
 
 //===================================================================
 
-int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struct, LOG_PARAMS) {
+static int _read_constant(struct Node* node, struct buffer_struct* buffer_struct, 
+                                                                         LOG_PARAMS) {
 
     tree_log_report();
-    NODE_PTR_CHECK(node);
+    BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
+    double constant = 0;
     int offset = 0;
-    char symb = 0;
 
-    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
-                                                              &symb, &offset);
+    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %ls %n", 
+                                                            &constant, &offset);
+
     if (scanned == -1 || scanned == 0) {
 
         error_report(TEXT_PROCESSING_ERR);
         buffer_dump(buffer_struct);
         return -1;
     }
-    
-    if (symb != '(') {
-
-        error_report(TREE_TEXT_INV_SYNTAXIS);
-        buffer_dump(buffer_struct);
-        return -1;
-    }
 
     buffer_struct->pos += offset;
 
-    symb = 0;
-    int after_word = 0;
-    int before_word = 0;
+    return node_init_constant(node, constant);
+}
 
-    while (symb != '(' && symb != ')') {
+//===================================================================
 
-        int ret = sscanf(buffer_struct->buffer + buffer_struct->pos, " %n%*s%n %n%c", 
-                                                                        &before_word, 
-                                                                         &after_word, 
-                                                                             &offset, 
-                                                                              &symb);
+static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struct, 
+                                                                       LOG_PARAMS) {
 
-        if (ret != 1) {
+    tree_log_report();
+    NODE_PTR_CHECK(node);
+
+    char symb = 0;
+    int offset = 0;
+
+    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
+                                                              &symb, &offset);
+
+    switch (scanned) {
+
+        case -1: {
+
+            error_report(TEXT_PROCESSING_ERR);
+            buffer_dump(buffer_struct);
+            return -1;
+        }
+
+        case 1: {
+
+            if (symb_is_var_name(symb)) {
+
+                int ret = node_init_variable(node, symb);
+                if (ret == -1)
+                    return -1;
+
+                buffer_struct->pos += offset;
+                break;
+            }
+
+            if (symb_is_operand(symb)) {
+
+                int ret = node_init_operand(node, symb);
+                if (ret == -1)
+                    return -1;
+
+                buffer_struct->pos += offset;
+                break;
+            }
+        }
+
+        case 0: {
+
+            int ret = read_constant(node, buffer_struct);
+            if (ret == -1)
+                return -1;
+        }
+
+        default: {
 
             error_report(TREE_TEXT_INV_SYNTAXIS);
-            buffer_dump(buffer_struct);
             return -1;
         }
-        
-        if (*(buffer_struct->buffer + buffer_struct->pos + before_word) == '{' 
-         || *(buffer_struct->buffer + buffer_struct->pos + before_word) == '}') {
-
-            error_report(TREE_TEXT_EMPTY_NODE_NAME);
-            buffer_dump(buffer_struct);
-            return -1;
-        }
-
-        buffer_struct->pos += offset;
-
-    }
-
-    *(buffer_struct->buffer + buffer_struct->pos - offset + after_word) = '\0';
-    node_init(node, node_data);
-
-    if (*(buffer_struct->buffer + buffer_struct->pos) == ')') {
-
-        buffer_struct->pos++;
-        return 0;
-    }
-
-
-    if (*(buffer_struct->buffer + buffer_struct->pos) == '(') {
-
-        node->special_flag = 1;
-
-        int ret = node_add_sons(node);
-        if (ret == -1)
-            return -1;
-
-        ret = node_read_from_buffer(node->right_son, buffer_struct);
-        if (ret == -1)
-            return -1;
-
-        ret = node_read_from_buffer(node->left_son, buffer_struct);
-        if (ret == -1)
-            return -1;
-
-        sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
-                                                    &symb, &offset);
-
-        if (symb == '}') {
-
-            buffer_struct->pos += offset;
-            return 0;
-        }
-
-        else {
-
-            error_report(TREE_TEXT_NO_CLOSING_BRACKET);
-            buffer_dump(buffer_struct);
-            return -1;
-        } 
-
     }
 
     return 0;
@@ -255,9 +249,217 @@ int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struc
 
 //===================================================================
 
+static int _read_node_with_children(struct Node* node, struct Buffer_struct* buffer_struct, 
+                                                                                LOG_PARAMS) {
+
+    tree_log_report();
+    NODE_PTR_CHECK(node);
+
+    int ret = node_add_sons(node);
+    if (ret == -1)
+        return -1;
+
+    ret = node_read_from_buffer(node->left_son, buffer_struct);
+    if (ret == -1)
+        return -1;
+
+    ret = read_node_data(node, buffer_struct);
+    if (ret == -1)
+        return -1;
+
+    ret = node_read_from_buffer(node->right_son, buffer_struct);
+    if (ret == -1)
+        return -1;
+
+    return 0;
+}
+
+//===================================================================
+
+static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_ARGS) {
+
+    tree_log_report();
+    BUFFER_STRUCT_PTR_CHECK(buffer_struct);
+
+    int offset = 0;
+    char symb = 0;
+
+    scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
+                                                          &symb, &offset);
+
+    if (scanned == -1 || scanned == 0) {
+
+        error_report(TREE_TEXT_INV_SYNTAXIS);
+        buffer_dump(buffer_struct);
+        return -1;
+    }
+
+    if (symb == '(') {
+
+        buffer_struct->pos += offset;
+        return 0;
+    }
+
+    else {
+
+        error_report(TREE_TEXT_INV_SYNTAXIS);
+        buffer_dump(buffer_struct);
+        return -1;
+    } 
+
+    return 0;
+}
+}
+
+//===================================================================
+
+static int _read_closing_bracket(struct Buffer_struct* struct, LOG_PARAMS) {
+
+    tree_log_report();
+    BUFFER_STRUCT_PTR_CHECK(buffer_struct);
+
+    int offset = 0;
+    char symb = 0;
+
+    scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
+                                                          &symb, &offset);
+
+    if (scanned == -1 || scanned == 0) {
+
+        error_report(TREE_TEXT_INV_SYNTAXIS);
+        buffer_dump(buffer_struct);
+        return -1;
+    }
+
+    if (symb == ')') {
+
+        buffer_struct->pos += offset;
+        return 0;
+    }
+
+    else {
+
+        error_report(TREE_TEXT_NO_CLOSING_BRACKET);
+        buffer_dump(buffer_struct);
+        return -1;
+    } 
+
+    return 0;
+}
+
+//===================================================================
+
+int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struct, 
+                                                                       LOG_PARAMS) {
+
+    tree_log_report();
+    NODE_PTR_CHECK(node);
+    BUFFER_STRUCT_PTR_CHECK(buffer_struct);
+
+    int open_bracket = read_opening_bracket(buffer_struct);
+    if (open_bracket == -1)
+        return -1;
+
+    int offset = 0;
+    char symb = 0;
+    double constant = 0;
+
+    scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
+                                                          &symb, &offset);
+    
+    if (scanned == -1) {
+
+        error_report(TEXT_PROCESSING_ERR);
+        buffer_dump(buffer_struct);
+        return -1;
+    }
+
+    if (scanned == 0 || symb != '(') {
+
+        int ret = read_node_data(node, buffer_struct);
+        if (ret == -1)
+            return -1;
+    }
+
+    else if (symb == '(') {
+
+        int ret = read_node_with_children(node, buffer_struct);
+        if (ret == -1)
+            return -1;
+    }
+
+    else {
+
+        error_report(TREE_TEXT_INV_SYNTAXIS);
+        buffer_dump(buffer_struct);
+        return -1;
+    }
+
+    return read_closing_bracket(buffer_struct);
+}
+
+//===================================================================
+
+static const char* _input_skip_blanks(char* buffer, LOG_PARAMS) {
+
+    akinator_log_report();
+
+    char* slider = &buffer[strlen(buffer) - 1];
+
+    while (isblank(*slider) || *slider == '\n')
+        slider--;
+
+    *(slider + 1) = '\0';
+
+    const char* prepared_input = buffer;
+
+    while (isblank(*prepared_input))
+        prepared_input++;
+
+    return prepared_input;
+}
+
+//===================================================================
+
+static char* _diff_scan_input(LOG_PARAMS) {
+
+    diff_log_report();
+
+    char buf[Console_input_buf_size] = { 0 };
+
+    char* scanned = fgets(buf, Console_input_buf_size, stdin);
+    if (scanned == NULL) {
+
+        error_report(CONSOLE_READ_ERROR);
+        return NULL;
+    }
+
+    buf(strlen(buf) - 1) = '\0';
+
+    while (strlen(buf) == 0) {
+
+        clean_buffer(buf, Console_input_buf_size);
+
+        print("Error occurred during reading. Please try again.\n");
+
+        fgets(buf, Console_input_buf_size, stdin);
+        buf[strlen(buf) - 1] = '\0';
+    }
+
+    const char* prepared = input_skip_blanks(buf);
+    return strdup(prepared);
+}
+
+//===================================================================
+
 char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS) {
 
     diff_log_report();
+    if (tree == NULL) {
+
+        error_report(INV_TREE_PTR);
+        return NULL;
+    }
 
     if (!tree) {
 
@@ -265,7 +467,11 @@ char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS) {
         return NULL;
     }
 
-    return 0;
+    char* buffer = diff_scan_input();
+    if (buffer == NULL)
+        return NULL;
+
+    
 }
 
 //===================================================================

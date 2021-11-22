@@ -510,3 +510,6 @@ Operand node with no sons)
 
 DEF_ERR(819, INV_VAR_NAME,
 Invalid name of the variable)
+
+DEF_ERR(820, CONSOLE_READ_ERROR,
+Error occurred during read from console)

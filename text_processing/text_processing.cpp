@@ -140,7 +140,7 @@ char* _copy_from_file_to_buffer(const char* filename, int* size_ptr, LOG_PARAMS)
 	if (ret == -1)
 		return NULL;
 
-	*size_ptr = size
+	*size_ptr = (int)size;
 	return buf;
 }
 

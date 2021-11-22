@@ -712,9 +712,24 @@ int _tree_validator(struct Tree* tree, LOG_PARAMS) {
 
 //===================================================================
 
-static int is_ok_var_name(char var) {
+int symb_is_var_name(char symb) {
 
-    return (var < 97 || var > 122)? 0: 1;
+    return (symb < 'a' || symb > 'z')? 0: 1;
+}
+
+//===================================================================
+
+int symb_is_operand(char symb) {
+
+    for (int counter = 0; 
+             counter < Operands_number; 
+             counter++) {
+
+        if (symb == Operands[counter])
+            return 1;
+    }
+
+    return 0;
 }
 
 //===================================================================
@@ -731,11 +746,12 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
         return -1;
     }
 
-    if (node->data_type == variable && !is_ok_var_name(node->data.variable)) {
+    if (node->data_type == variable && symb_is_var_name(node->data.variable)) {
 
         error_report(INV_VAR_NAME);
         return -1;
     }
+
 
     return 0; 
 }

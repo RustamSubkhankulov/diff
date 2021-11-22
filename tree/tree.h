@@ -193,6 +193,10 @@ int _node_init_variable(struct Node* node, char var, LOG_PARAMS);
 
 int _node_init_operand(struct Node* node, char oper, LOG_PARAMS);
 
+int symb_is_var_name(char symb);
+
+int symb_is_operand(char symb);
+
 //===================================================================
 
 #define print_node_data_type(node, output) \
@@ -272,6 +276,15 @@ int _node_init_operand(struct Node* node, char oper, LOG_PARAMS);
 
 //#define node_init(node, value) _node_init(node, value, LOG_ARGS)
 
+#define node_init_constant(node, value) \
+       _node_init_constant(node, value, LOG_ARGS)
+
+#define node_init_variable(node, var) \
+       _node_init_variable(node, var, LOG_ARGS)
+
+#define node_init_operand(node, oper) \
+       _node_init_operand(node, oper, LOG_ARGS)
+
 #define tree_delete_branch(node_ptr) \
        _tree_delete_branch(node_ptr, LOG_ARGS)
 
@@ -279,6 +292,6 @@ int _node_init_operand(struct Node* node, char oper, LOG_PARAMS);
        _node_delete_branch(node, LOG_ARGS);           
 
 #define print_node_data(node, output) \
-       _print_node_data(node, output, LOG_ARGS)              
+       _print_node_data(node, output, LOG_ARGS)            
 
 //===================================================================

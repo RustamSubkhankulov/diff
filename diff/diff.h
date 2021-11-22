@@ -54,12 +54,18 @@
 
 enum operands {
 
-       add = 43;
-       sub = 45,
-       mul = 42,
-       div = 47,
-       pow = 94
-}
+       ADD = '+',
+       SUB = '-',
+       MUL = '*',
+       DIV = '/',
+       POW = '^'
+};
+
+//===================================================================
+
+const int Operands_number = 5;
+
+const char Operands[Operands_number] = {ADD, SUB, MUL, DIV, POW};
 
 //===================================================================
 
@@ -117,5 +123,24 @@ int _buffer_dump(struct Buffer_struct* buffer_struct, LOG_PARAMS);
 #define node_read_from_buffer(node, buffer_struct) \
        _node_read_from_buffer(node, buffer_struct, LOG_ARGS)
 
+#define read_node_data(node, buffer_struct) \
+       _read_node_data(node, buffer_struct, LOG_ARGS)
 
+#define read_node_with_children(node, buffer_struct) \
+       _read_node_with_children(node, buffer_struct, LOG_ARGS) 
+
+#define read_constant(node, buffer_struct) \
+       _read_constant(node, buffer_struct, LOG_ARGS)
+
+#define read_closing_bracket(buffer_struct) \
+       _read_closing_bracket(buffer_struct, LOG_ARGS)
+
+#define read_opening_bracket(buffer_struct) \
+       _read_opening_bracket(buffer_struct, LOG_ARGS)
+
+#define input_skip_blanks(buffer) \
+       _input_skip_blanks(buffer, LOG_ARGS)
+
+#define diff_scan_input() \
+       _diff_scan_input(LOG_ARGS)
 
