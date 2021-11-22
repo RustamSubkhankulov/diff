@@ -18,6 +18,7 @@ int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS) {
         return -1;
 
     ret = node_init_constant(tree->root, 0);
+    tree->root->parent = No_parent;
 
     DIFF_TREE_VERIFICATION(tree);
 
@@ -547,9 +548,11 @@ int _node_diff_execute(struct Node* node, struct Node* diff_node, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(node);
     NODE_PTR_CHECK(diff_node);
+
     
 
     return 0;
+}
 
 //===================================================================
 

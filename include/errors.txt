@@ -513,3 +513,9 @@ Invalid name of the variable)
 
 DEF_ERR(820, CONSOLE_READ_ERROR,
 Error occurred during read from console)
+
+DEF_ERR(821, NODE_INV_PARENT,
+Invalid parent pointer in node structure)
+
+DEF_ERR(822, NODE_EQUAL_SONS,
+Children of the node can not be both equal)

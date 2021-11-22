@@ -5,6 +5,10 @@
 
 //===================================================================
 
+static struct Node* No_parent = (struct Node*)993;
+
+//===================================================================
+
 union Data {
 
     double constant;
@@ -17,6 +21,8 @@ union Data {
 struct Node {
 
     union Data data;
+
+    struct Node* parent;
 
     struct Node* left_son;
     struct Node* right_son;

@@ -458,6 +458,7 @@ int _node_add_right_son(struct Node* node, LOG_PARAMS) {
         return -1;
 
     node->right_son = (Node*)node_ptr;
+    node->right_son->parent = node;
 
     return 0;
 }
@@ -481,6 +482,7 @@ int _node_add_left_son(struct Node* node, LOG_PARAMS) {
         return -1;
 
     node->left_son = (Node*)node_ptr;
+    node->left_son->parent = node;
 
     return 0;
 }
@@ -770,6 +772,23 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
         return -1;
     }
 
+    if (node->right_son != NULL 
+     && node->left_son  != NULL 
+     && node->left_son == node->right_son) {
+
+        error_report(NODE_EQUAL_SONS);
+        return -1;
+    }
+
+    if (node->parent != No_parent) {
+
+        if (node->parent->left_son  != node 
+         && node->parent->right_son != node) {
+
+            error_report(NODE_INV_PARENT);
+            return -1;
+        }
+    }
 
     return 0; 
 }
@@ -789,9 +808,10 @@ int _node_print(struct Node* node, LOG_PARAMS) {
     fprintf(logs_file, "> Data type: <");
     err_val = print_node_data_type(node, logs_file); $
 
-    fprintf(logs_file, ">\n ""Left son: <%p> Right son: <%p> \n",
-                                                  node->left_son, 
-                                                 node->right_son);
+    fprintf(logs_file, ">\n ""Left son: <%p> Right son: <%p> Parent: <%p>\n",
+                                                              node->left_son, 
+                                                             node->right_son,
+                                                               node->parent);
     fprintf(logs_file, "</pre></div>");
 
     return 0;
