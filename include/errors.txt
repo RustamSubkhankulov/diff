@@ -519,3 +519,9 @@ Invalid parent pointer in node structure)
 
 DEF_ERR(822, NODE_EQUAL_SONS,
 Children of the node can not be both equal)
+
+DEF_ERR(823, NODE_NO_SONS,
+Operand or constant nodes must not have children)
+
+DEF_ERR(824, DIFF_FUNC_FALSE_CALL,
+False call of diff function - not matching type of node data)

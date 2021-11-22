@@ -15,23 +15,12 @@ int main(int, char* argv[]) {
 
     int err_val = diff_tree_ctor(&tree); $
 
-    // node_init_operand(tree.root, '+');
-
-    // node_add_sons(tree.root);
-
-    // node_init_variable(tree.root->left_son, 'x');
-    // node_init_constant(tree.root->right_son, 2);
-    // tree_dump(&tree);
-
     char* buffer = NULL;
 
     #ifdef DIFF_READ_FROM_FILE
-
         buffer = diff_read_from_file(&tree, argv[2]); 
     #else
         buffer = diff_read_from_console(&tree); 
-        node_save_to_file(tree.root, stdout);
-
     #endif
 
     if (buffer == NULL)
@@ -43,13 +32,9 @@ int main(int, char* argv[]) {
     err_val = diff_execute(&tree, &diff); $
 
     #ifdef DIFF_OUT_TO_FILE
-
         err_val = diff_out_to_file(&diff, argv[3]);
-
     #else
-
         err_val = diff_out_to_console(&diff);
-
     #endif
 
     err_val = diff_tree_dtor(&tree); $

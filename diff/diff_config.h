@@ -20,8 +20,8 @@ const int Console_input_buf_size = 200;
 
 //-------------------------------------------------------------------
 
-#define DIFF_READ_FROM_FILE
+//#define DIFF_READ_FROM_FILE
 
-#define DIFF_OUT_TO_FILE
+//#define DIFF_OUT_TO_FILE
 
 //===================================================================

@@ -110,8 +110,17 @@ char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
 #define diff_execute(tree, diff) \
        _diff_execute(tree, diff, LOG_ARGS)
 
-#define node_diff_execute(node, diff_node) \
-       _node_diff_execute(node, diff_node, LOG_ARGS)
+#define node_diff_execute(orig_node, diff_node) \
+       _node_diff_execute(orig_node, diff_node, LOG_ARGS)
+
+#define diff_constant_node(orig_node, diff_node) \
+       _diff_constant_node(orig_node, diff_node, LOG_ARGS)
+
+#define diff_variable_node(orig_node, diff_node) \
+       _diff_variable_node(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_node(orig_node, diff_node) \
+       _diff_operand_node(orig_node, diff_node, LOG_ARGS)
 
 #define diff_out_to_file(diff, filename) \
        _diff_out_to_file(diff, filename, LOG_ARGS)

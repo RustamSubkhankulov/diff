@@ -766,6 +766,13 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
         return -1;
     }
 
+    if ((node->data_type == CONSTANT || node->data_type == VARIABLE) 
+     && (node->right_son != NULL     || node->left_son  != NULL)) {
+
+        error_report(NODE_NO_SONS);
+        return -1;
+    }
+
     if (node->data_type == VARIABLE && !symb_is_var_name(node->data.variable)) {
 
         error_report(INV_VAR_NAME);

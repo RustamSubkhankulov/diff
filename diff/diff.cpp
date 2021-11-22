@@ -8,6 +8,17 @@
 
 //===================================================================
 
+static int _diff_constant_node(struct Node* orig_node, struct Node* diff_node, 
+                                                                  LOG_PARAMS);
+
+static int _diff_variable_node(struct Node* orig_node, struct Node* diff_node, 
+                                                                  LOG_PARAMS);
+
+static int  _diff_operand_node(struct Node* orig_node, struct Node* diff_node, 
+                                                                  LOG_PARAMS);
+
+//===================================================================
+
 int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS) {
 
     diff_log_report();
@@ -543,10 +554,103 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
 
 //===================================================================
 
-int _node_diff_execute(struct Node* node, struct Node* diff_node, LOG_PARAMS) {
+int _node_diff_execute(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS) {
 
     diff_log_report();
-    NODE_PTR_CHECK(node);
+    NODE_PTR_CHECK(orig_node);
+    NODE_PTR_CHECK(diff_node);
+
+    switch(orig_node->data_type) {
+
+        case CONSTANT: {
+
+            return diff_constant_node(orig_node, diff_node);
+        }
+
+        case VARIABLE: {
+
+            return diff_variable_node(orig_node, diff_node);
+        }
+
+        case OPERAND: {
+
+            return diff_operand_node(orig_node, diff_node);
+        }
+        default: {
+
+            error_report(DIFF_INV_DATA_TYPE);
+            return -1;
+        }
+    }
+}
+
+//===================================================================
+
+static int _diff_constant_node(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(orig_node);
+    NODE_PTR_CHECK(diff_node);
+
+    if (orig_node->parent == No_parent) {
+
+        int ret = node_init_constant(diff_node, 0);
+        if (ret == -1)
+            return -1;
+
+        diff_node->parent = No_parent;
+    }
+
+    else if (orig_node->parent->right_son == orig_node) {
+
+        int ret = node_add_right_son(diff_node);
+        if (ret  == -1)
+            return -1;
+
+        ret = node_init_constant(diff_node->right_son, 0);
+        if (ret == -1)
+            return -1;
+    }
+
+    else if (orig_node->parent->left_son == orig_node) {
+
+        int ret = node_add_left_son(diff_node);
+        if (ret == -1)
+            return -1;
+
+        ret = node_init_constant(diff_node->left_son, 0);
+        if (ret == -1)
+            return -1;
+    }
+
+    else {
+
+        error_report(NODE_INV_PARENT);
+        return -1;
+    }
+
+    return 0;
+}
+
+//===================================================================
+
+static int _diff_variable_node(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(orig_node);
+    NODE_PTR_CHECK(diff_node);
+
+    
+
+    return 0;
+}
+
+//===================================================================
+
+static int _diff_operand_node(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(orig_node);
     NODE_PTR_CHECK(diff_node);
 
     
