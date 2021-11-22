@@ -3,6 +3,7 @@
 
 #include "tree.h"
 #include "../general/general.h"
+#include "../diff/diff.h"
 
 //===================================================================
 
@@ -13,16 +14,19 @@ static int Node_counter = 0;
 //===================================================================
 
 static const char* Var_color   = "#a5b8ef";
+static const char* Var_shape   = "octagon";
 
 static const char* Const_color = "#e9a0a4";
+static const char* Const_shape = "ellipse";
 
 static const char* Oper_color  = "#d2c1e6";
+static const char* Oper_shape  = "diamond";
 
 //===================================================================
 
 int _print_node_data_type(struct Node* node, FILE* output, LOG_PARAMS) {
 
-    tree_log_report();
+    //tree_log_report();
     NODE_PTR_CHECK(node);
 
     if (output == NULL) {
@@ -33,21 +37,21 @@ int _print_node_data_type(struct Node* node, FILE* output, LOG_PARAMS) {
 
     switch(node->data_type) {
 
-        case constant: {
+        case CONSTANT: {
 
-            fprintf(output, "constant");
+            fprintf(output, " constant ");
             break;
         }
 
-        case variable: {
+        case VARIABLE: {
 
-            fprintf(output, "variable");
+            fprintf(output, " variable ");
             break;
         }
 
-        case operand: {
+        case OPERAND: {
 
-            fprintf(output, "operand");
+            fprintf(output, " operand ");
             break;
         }
 
@@ -65,7 +69,7 @@ int _print_node_data_type(struct Node* node, FILE* output, LOG_PARAMS) {
 
 int _print_node_data(struct Node* node, FILE* output, LOG_PARAMS) {
 
-    tree_log_report();
+    //tree_log_report();
     NODE_PTR_CHECK(node);
 
     if (output == NULL) {
@@ -76,19 +80,19 @@ int _print_node_data(struct Node* node, FILE* output, LOG_PARAMS) {
 
     switch(node->data_type) {
 
-        case constant: {
+        case CONSTANT: {
 
             fprintf(output, "%lf", node->data.constant);
             break;
         }
 
-        case variable: {
+        case VARIABLE: {
 
             fprintf(output, "%c", node->data.variable);
             break;
         }
 
-        case operand: {
+        case OPERAND: {
 
             fprintf(output, "%c", node->data.operand);
             break;
@@ -181,7 +185,7 @@ int _node_save_to_file(struct Node* node, FILE* output, LOG_PARAMS) {
 
         if (node->left_son) {
 
-            int ret = node_save_to_file(node->right_son, output);
+            int ret = node_save_to_file(node->left_son, output);
             if (ret == -1)
                 return -1;
         }
@@ -190,7 +194,7 @@ int _node_save_to_file(struct Node* node, FILE* output, LOG_PARAMS) {
 
         if (node->right_son) {
 
-            int ret = node_save_to_file(node->left_son, output);
+            int ret = node_save_to_file(node->right_son, output);
             if (ret == -1)
                 return -1;
         }
@@ -244,7 +248,7 @@ int _tree_draw_graph(struct Tree* tree, LOG_PARAMS) {
 
     fprintf(graph, "digraph G{\n");
     fprintf(graph, "rankdir=TB;\n");
-    fprintf(graph, "node[ shape = doubleoctagon; style = filled ];\n");
+    fprintf(graph, "node[ style = filled ];\n");
     fprintf(graph, "edge[ arrowhead = vee ];\n");
 
     struct Node_dot node_dot = { 0 };
@@ -288,6 +292,40 @@ int _graph_call_dot(LOG_PARAMS) {
 
 //===================================================================
 
+static int get_node_dot_parameters(struct Node* node, const char** node_color, 
+                                                      const char** node_shape) {
+
+    switch (node->data_type) {
+
+        case CONSTANT: {
+
+            *node_color = Const_color;
+            *node_shape = Const_shape;
+            break;
+        }
+
+        case VARIABLE: {
+
+            *node_color = Var_color;
+            *node_shape = Var_shape;
+            break;
+        }
+
+        case OPERAND: {
+
+            *node_color = Oper_color;
+            *node_shape = Oper_shape;
+            break;
+        }
+
+        default: return -1;
+    }
+
+    return 0;
+}
+
+//===================================================================
+
 int _node_draw_graph(struct Node* node, struct Node_dot* node_dot, LOG_PARAMS) {
 
     tree_log_report();
@@ -303,43 +341,25 @@ int _node_draw_graph(struct Node* node, struct Node_dot* node_dot, LOG_PARAMS) {
     }
 
     const char* node_color = 0;
+    const char* node_shape = 0;
 
-    switch (node->data_type) {
+    int ret = get_node_dot_parameters(node, &node_color, &node_shape);
+    if (ret == -1) {
 
-        case constant: {
-
-            node_color = Const_color;
-            break;
-        }
-
-        case variable: {
-
-            node_color = Var_color;
-            break;
-        }
-
-        case operand: {
-
-            node_color = Oper_color;
-            break;
-        }
-
-        default: {
-
-            error_report(DIFF_INV_DATA_TYPE);
-            return -1;
-        }
-    }
+        error_report(DIFF_INV_DATA_TYPE);
+        return -1;
+    }   
 
     fprintf(node_dot->graph, "\n NODE%d [label = \"", node_number);
     print_node_data(node, node_dot->graph);
-    fprintf(node_dot->graph, "\" color = \"%s\" ]; \n", node_color);
+    fprintf(node_dot->graph, "\" shape = \"%s\"",       node_shape);
+    fprintf(node_dot->graph, "   color = \"%s\" ]; \n", node_color);
 
     if (node->left_son != NULL) {
 
         node_dot_fill(node_dot, node_dot->graph, node_number);
         
-        int ret = node_draw_graph(node->left_son, node_dot);
+        ret = node_draw_graph(node->left_son, node_dot);
         if (ret == -1)
             return -1;
     }
@@ -348,7 +368,7 @@ int _node_draw_graph(struct Node* node, struct Node_dot* node_dot, LOG_PARAMS) {
 
         node_dot_fill(node_dot, node_dot->graph, node_number);
         
-        int ret = node_draw_graph(node->right_son, node_dot);
+        ret = node_draw_graph(node->right_son, node_dot);
         if (ret == -1)
             return -1;
     }
@@ -489,7 +509,7 @@ int _node_init_constant(struct Node* node, double value, LOG_PARAMS) {
     tree_log_report();
     NODE_PTR_CHECK(node);
 
-    node->data_type = constant;
+    node->data_type = CONSTANT;
     node->data.constant = value;
 
     return 0;
@@ -502,7 +522,7 @@ int _node_init_variable(struct Node* node, char var, LOG_PARAMS) {
     tree_log_report();
     NODE_PTR_CHECK(node);
 
-    node->data_type = variable;
+    node->data_type = VARIABLE;
     node->data.variable = var;
 
     return 0;
@@ -515,7 +535,7 @@ int _node_init_operand(struct Node* node, char oper, LOG_PARAMS) {
     tree_log_report();
     NODE_PTR_CHECK(node);
 
-    node->data_type = operand;
+    node->data_type = OPERAND;
     node->data.operand = oper;
 
     return 0;
@@ -632,8 +652,6 @@ int _tree_ctor(struct Tree* tree, LOG_PARAMS) {
     if (tree->root == NULL)
         return -1;
 
-    TREE_VERIFICATION(tree);
-
     return 0;
 }
 
@@ -739,14 +757,14 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
     tree_log_report();
     NODE_PTR_CHECK(node);
 
-    if (node->data_type == operand 
+    if (node->data_type == OPERAND 
     && (node->left_son == NULL && node->right_son == NULL)) {
 
         error_report(OPER_NO_SONS);
         return -1;
     }
 
-    if (node->data_type == variable && symb_is_var_name(node->data.variable)) {
+    if (node->data_type == VARIABLE && !symb_is_var_name(node->data.variable)) {
 
         error_report(INV_VAR_NAME);
         return -1;
@@ -760,15 +778,17 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
 
 int _node_print(struct Node* node, LOG_PARAMS) {
 
-    tree_log_report();
+    //tree_log_report();
     NODE_PTR_CHECK(node);
 
     fprintf(logs_file, "<div style = \"background-color: lightgrey; font-size: 18\"><pre>");
 
     fprintf(logs_file, "\n<b>Node: <%p> </b> Data: <", node);
-    print_node_data(node, logs_file);
+    int err_val = print_node_data(node, logs_file);  $
+
     fprintf(logs_file, "> Data type: <");
-    print_node_data_type(node, logs_file); 
+    err_val = print_node_data_type(node, logs_file); $
+
     fprintf(logs_file, ">\n ""Left son: <%p> Right son: <%p> \n",
                                                   node->left_son, 
                                                  node->right_son);

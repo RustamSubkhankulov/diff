@@ -41,6 +41,16 @@
 
 //===================================================================
 
+#define clean_buffer(buffer, size) {                                \
+    do                                                              \
+    {                                                               \
+        memset(buffer, 0, size * sizeof(char));                     \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//===================================================================
+
 #ifdef GENERAL_LOGS
 
        #define general_log_report() \

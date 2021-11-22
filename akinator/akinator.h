@@ -14,16 +14,6 @@ struct Compare_obj {
 
 //===================================================================
 
-#define clean_buffer(buffer, size) {                                \
-    do                                                              \
-    {                                                               \
-        memset(buffer, 0, size * sizeof(char));                     \
-                                                                    \
-    } while(0);                                                     \
-}
-
-//===================================================================
-
 #ifdef AKINATOR_LOGS
 
     #define akinator_log_report() \

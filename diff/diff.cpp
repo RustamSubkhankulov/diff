@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "diff.h"
 #include "../text_processing/text_processing.h"
@@ -16,9 +17,7 @@ int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS) {
     if (ret == -1)
         return -1;
 
-    tree->root = (struct Node*)node_allocate_memory();
-    if (!tree->root)
-        return -1;
+    ret = node_init_constant(tree->root, 0);
 
     DIFF_TREE_VERIFICATION(tree);
 
@@ -133,6 +132,7 @@ int _buffer_dump(struct Buffer_struct* buffer_struct, LOG_PARAMS) {
     }
 
     fprintf(logs_file, "</table> \n");
+    fflush(logs_file);
 
     return 0;
 }
@@ -160,7 +160,7 @@ int _buffer_struct_init(struct Buffer_struct* buffer_struct, char* buffer,
 
 //===================================================================
 
-static int _read_constant(struct Node* node, struct buffer_struct* buffer_struct, 
+static int _read_constant(struct Node* node, struct Buffer_struct* buffer_struct, 
                                                                          LOG_PARAMS) {
 
     tree_log_report();
@@ -169,7 +169,7 @@ static int _read_constant(struct Node* node, struct buffer_struct* buffer_struct
     double constant = 0;
     int offset = 0;
 
-    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %ls %n", 
+    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %lf %n", 
                                                             &constant, &offset);
 
     if (scanned == -1 || scanned == 0) {
@@ -180,7 +180,9 @@ static int _read_constant(struct Node* node, struct buffer_struct* buffer_struct
     }
 
     buffer_struct->pos += offset;
-
+    //
+    buffer_dump(buffer_struct);
+    //
     return node_init_constant(node, constant);
 }
 
@@ -216,25 +218,33 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
                     return -1;
 
                 buffer_struct->pos += offset;
-                break;
+                //
+                buffer_dump(buffer_struct);
+                //
             }
 
-            if (symb_is_operand(symb)) {
+            else if (symb_is_operand(symb)) {
 
                 int ret = node_init_operand(node, symb);
                 if (ret == -1)
                     return -1;
 
                 buffer_struct->pos += offset;
-                break;
+                //
+                buffer_dump(buffer_struct);
+                //
             }
-        }
 
-        case 0: {
+            else {
 
-            int ret = read_constant(node, buffer_struct);
-            if (ret == -1)
-                return -1;
+                int ret = read_constant(node, buffer_struct);
+                if (ret == -1)
+                    return -1;
+
+                break;  
+            }
+
+            break;
         }
 
         default: {
@@ -243,6 +253,10 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
             return -1;
         }
     }
+
+    //
+    buffer_dump(buffer_struct);
+    //
 
     return 0;
 }
@@ -263,20 +277,32 @@ static int _read_node_with_children(struct Node* node, struct Buffer_struct* buf
     if (ret == -1)
         return -1;
 
+    //
+    buffer_dump(buffer_struct);
+    //
+
     ret = read_node_data(node, buffer_struct);
     if (ret == -1)
         return -1;
 
+    //
+    buffer_dump(buffer_struct);
+    //
+
     ret = node_read_from_buffer(node->right_son, buffer_struct);
     if (ret == -1)
         return -1;
+
+    //
+    buffer_dump(buffer_struct);
+    //
 
     return 0;
 }
 
 //===================================================================
 
-static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_ARGS) {
+static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS) {
 
     tree_log_report();
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
@@ -284,7 +310,7 @@ static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_ARGS) 
     int offset = 0;
     char symb = 0;
 
-    scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
+    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
                                                           &symb, &offset);
 
     if (scanned == -1 || scanned == 0) {
@@ -307,13 +333,17 @@ static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_ARGS) 
         return -1;
     } 
 
+    //
+    buffer_dump(buffer_struct);
+    //
+
     return 0;
-}
+
 }
 
 //===================================================================
 
-static int _read_closing_bracket(struct Buffer_struct* struct, LOG_PARAMS) {
+static int _read_closing_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS) {
 
     tree_log_report();
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
@@ -321,7 +351,7 @@ static int _read_closing_bracket(struct Buffer_struct* struct, LOG_PARAMS) {
     int offset = 0;
     char symb = 0;
 
-    scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
+    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
                                                           &symb, &offset);
 
     if (scanned == -1 || scanned == 0) {
@@ -344,6 +374,10 @@ static int _read_closing_bracket(struct Buffer_struct* struct, LOG_PARAMS) {
         return -1;
     } 
 
+    //
+    buffer_dump(buffer_struct);
+    //
+
     return 0;
 }
 
@@ -356,16 +390,19 @@ int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struc
     NODE_PTR_CHECK(node);
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
+    //
+    buffer_dump(buffer_struct);
+    //
+
     int open_bracket = read_opening_bracket(buffer_struct);
     if (open_bracket == -1)
         return -1;
 
     int offset = 0;
     char symb = 0;
-    double constant = 0;
 
-    scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
-                                                          &symb, &offset);
+    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %c %n", 
+                                                              &symb, &offset);
     
     if (scanned == -1) {
 
@@ -395,6 +432,10 @@ int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struc
         return -1;
     }
 
+    //
+    buffer_dump(buffer_struct);
+    //
+
     return read_closing_bracket(buffer_struct);
 }
 
@@ -402,7 +443,7 @@ int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struc
 
 static const char* _input_skip_blanks(char* buffer, LOG_PARAMS) {
 
-    akinator_log_report();
+    diff_log_report();
 
     char* slider = &buffer[strlen(buffer) - 1];
 
@@ -434,13 +475,13 @@ static char* _diff_scan_input(LOG_PARAMS) {
         return NULL;
     }
 
-    buf(strlen(buf) - 1) = '\0';
+    buf[strlen(buf) - 1] = '\0';
 
     while (strlen(buf) == 0) {
 
         clean_buffer(buf, Console_input_buf_size);
 
-        print("Error occurred during reading. Please try again.\n");
+        printf("Error occurred during reading. Please try again.\n");
 
         fgets(buf, Console_input_buf_size, stdin);
         buf[strlen(buf) - 1] = '\0';
@@ -471,7 +512,17 @@ char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS) {
     if (buffer == NULL)
         return NULL;
 
-    
+    struct Buffer_struct buffer_struct = { 0 };
+    buffer_struct_init(&buffer_struct, buffer, (int)strlen(buffer), 0);
+
+    int ret = node_read_from_buffer(tree->root, &buffer_struct);
+    if (ret == -1) {
+
+        free(buffer);
+        return NULL;
+    }
+
+    return buffer;   
 }
 
 //===================================================================
@@ -492,7 +543,7 @@ int _diff_out_to_file(struct Tree* diff, const char* filename, LOG_PARAMS) {
     diff_log_report();
     TREE_PTR_CHECK(diff);
 
-    return 0;
+    return tree_save_to_file(diff, filename);
 }
 
 //===================================================================
@@ -502,6 +553,6 @@ int _diff_out_to_console(struct Tree* diff, LOG_PARAMS) {
     diff_log_report();
     TREE_PTR_CHECK(diff);
 
-    return 0;
+    return node_save_to_file(diff->root, stdout);
 }
 

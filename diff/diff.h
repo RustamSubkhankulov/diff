@@ -112,7 +112,7 @@ int _buffer_dump(struct Buffer_struct* buffer_struct, LOG_PARAMS);
        _diff_out_to_file(diff, filename, LOG_ARGS)
 
 #define diff_out_to_console(diff) \
-       _diff_out_to_comsole(diff, LOG_ARGS)
+       _diff_out_to_console(diff, LOG_ARGS)
 
 #define buffer_struct_init(buffer_struct, buffer, size, pos) \
        _buffer_struct_init(buffer_struct, buffer, size, pos, LOG_ARGS)
