@@ -93,6 +93,8 @@ char* _diff_read_from_file(struct Tree* tree, const char* filename, LOG_PARAMS);
 
 char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
 
+int _diff_copy_branch(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS);
+
 //===================================================================
 
 #define diff_tree_ctor(tree) \
@@ -157,4 +159,19 @@ char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
 
 #define diff_scan_input() \
        _diff_scan_input(LOG_ARGS)
+
+#define diff_copy_branch(orig_node, diff_node) \
+       _diff_copy_branch(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_mul(orig_node, diff_node) \
+       _diff_operand_mul(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_div(orig_node, diff_node) \
+       _diff_operand_div(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_pow(orig_node, diff_node) \
+       _diff_operand_pow(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_add_or_sub(orig_node, diff_node, oper) \
+       _diff_operand_add_or_sub(orig_node, diff_node, oper, LOG_ARGS)
 

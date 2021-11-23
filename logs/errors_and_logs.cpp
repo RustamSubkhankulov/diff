@@ -41,6 +41,8 @@ int _error_report(int error_code, LOG_PARAMS) {
 
     fprintf(logs_file, "\n</pre></div>\n");
 
+    fflush(logs_file);
+
     return 0;
 }
 

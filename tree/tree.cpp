@@ -448,10 +448,6 @@ int _node_add_right_son(struct Node* node, LOG_PARAMS) {
         return -1;
     }
 
-    int is_ok = node_validator(node);
-    if (is_ok == -1)  
-        return -1;
-
     void* node_ptr = node_allocate_memory();
 
     if (node_ptr == NULL)
@@ -757,6 +753,7 @@ int symb_is_operand(char symb) {
 int _node_validator(struct Node* node, LOG_PARAMS) {
 
     tree_log_report();
+    fflush(logs_file);
     NODE_PTR_CHECK(node);
 
     if (node->data_type == OPERAND 
