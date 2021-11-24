@@ -211,3 +211,21 @@ int _diff_copy_branch(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS
 #define diff_operand_add_or_sub(orig_node, diff_node, oper) \
        _diff_operand_add_or_sub(orig_node, diff_node, oper, LOG_ARGS)
 
+#define diff_operand_sin(orig_node, diff_node) \
+       _diff_operand_sin(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_cos(orig_node, diff_node) \
+       _diff_operand_cos(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_tg(orig_node, diff_node) \
+       _diff_operand_tg(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_ctg(orig_node, diff_node) \
+       _diff_operand_ctg(orig_node, diff_node, LOG_ARGS)
+
+#define diff_operand_arcsin_and_arccos(orig_node, diff_node, oper) \
+       _diff_operand_arcsin_and_arccos(orig_node, diff_node, oper, LOG_ARGS)
+
+#define diff_operand_arctg_and_arcctg(orig_node, diff_node, oper) \
+       _diff_operand_arctg_and_arcctg(orig_node, diff_node, oper, LOG_ARGS)
+

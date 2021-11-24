@@ -205,6 +205,9 @@ int _node_save_to_file(struct Node* node, FILE* output, LOG_PARAMS) {
 
         fprintf(output, " ( ");
 
+        if (node->data_type == OPERAND && is_function_operand(node))
+            print_node_data(node, output);
+
         if (node->left_son) {
 
             int ret = node_save_to_file(node->left_son, output);
@@ -212,7 +215,9 @@ int _node_save_to_file(struct Node* node, FILE* output, LOG_PARAMS) {
                 return -1;
         }
 
-        print_node_data(node, output);
+        if (node->data_type != OPERAND
+        || (node->data_type == OPERAND && !is_function_operand(node)))
+            print_node_data(node, output);
 
         if (node->right_son) {
 
@@ -750,6 +755,23 @@ int _tree_validator(struct Tree* tree, LOG_PARAMS) {
 
 //===================================================================
 
+int is_function_operand(struct Node* node) {
+
+    if (!node)
+        return 0;
+
+    for (int counter = 0;
+             counter < Functions_number;
+             counter++) 
+
+        if (node->data.operand == Functions[counter].code)
+            return 1;
+
+    return 0;
+}
+
+//===================================================================
+
 int symb_is_var_name(char symb) {
 
     return (symb < 'a' || symb > 'z')? 0: 1;
@@ -761,11 +783,10 @@ int symb_is_operand(int symb) {
 
     for (int counter = 0; 
              counter < Operands_number; 
-             counter++) {
+             counter++) 
 
         if (symb == Operands[counter])
             return 1;
-    }
 
     return 0;
 }

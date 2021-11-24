@@ -206,6 +206,8 @@ int symb_is_var_name(char symb);
 
 int symb_is_operand(int symb);
 
+int is_function_operand(struct Node* node);
+
 //===================================================================
 
 #define print_operand(oper_code, output) \
