@@ -108,7 +108,7 @@ int _diff_tree_dtor(struct Tree* tree, LOG_PARAMS);
 
 int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS);
 
-int _node_diff_execute(struct Node* node, struct Node* diff_node, LOG_PARAMS);
+int _node_diff_execute(struct Node* node, struct Node* diff, LOG_PARAMS);
 
 int _diff_out_to_file(struct Tree* diff, const char* filename, LOG_PARAMS);
 
@@ -126,7 +126,7 @@ char* _diff_read_from_file(struct Tree* tree, const char* filename, LOG_PARAMS);
 
 char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
 
-int _diff_copy_branch(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS);
+int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 //===================================================================
 
@@ -145,17 +145,17 @@ int _diff_copy_branch(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS
 #define diff_execute(tree, diff) \
        _diff_execute(tree, diff, LOG_ARGS)
 
-#define node_diff_execute(orig_node, diff_node) \
-       _node_diff_execute(orig_node, diff_node, LOG_ARGS)
+#define node_diff_execute(orig, diff) \
+       _node_diff_execute(orig, diff, LOG_ARGS)
 
-#define diff_constant_node(orig_node, diff_node) \
-       _diff_constant_node(orig_node, diff_node, LOG_ARGS)
+#define diff_constant_node(orig, diff) \
+       _diff_constant_node(orig, diff, LOG_ARGS)
 
-#define diff_variable_node(orig_node, diff_node) \
-       _diff_variable_node(orig_node, diff_node, LOG_ARGS)
+#define diff_variable_node(orig, diff) \
+       _diff_variable_node(orig, diff, LOG_ARGS)
 
-#define diff_operand_node(orig_node, diff_node) \
-       _diff_operand_node(orig_node, diff_node, LOG_ARGS)
+#define diff_operand_node(orig, diff) \
+       _diff_operand_node(orig, diff, LOG_ARGS)
 
 #define diff_out_to_file(diff, filename) \
        _diff_out_to_file(diff, filename, LOG_ARGS)
@@ -196,36 +196,36 @@ int _diff_copy_branch(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS
 #define diff_scan_input() \
        _diff_scan_input(LOG_ARGS)
 
-#define diff_copy_branch(orig_node, diff_node) \
-       _diff_copy_branch(orig_node, diff_node, LOG_ARGS)
+#define diff_copy_branch(orig, diff) \
+       _diff_copy_branch(orig, diff, LOG_ARGS)
 
-#define diff_operand_mul(orig_node, diff_node) \
-       _diff_operand_mul(orig_node, diff_node, LOG_ARGS)
+#define diff_operand_mul(orig, diff) \
+       _diff_operand_mul(orig, diff, LOG_ARGS)
 
-#define diff_operand_div(orig_node, diff_node) \
-       _diff_operand_div(orig_node, diff_node, LOG_ARGS)
+#define diff_operand_div(orig, diff) \
+       _diff_operand_div(orig, diff, LOG_ARGS)
 
-#define diff_operand_pow(orig_node, diff_node) \
-       _diff_operand_pow(orig_node, diff_node, LOG_ARGS)
+#define diff_operand_pow(orig, diff) \
+       _diff_operand_pow(orig, diff, LOG_ARGS)
 
-#define diff_operand_add_or_sub(orig_node, diff_node, oper) \
-       _diff_operand_add_or_sub(orig_node, diff_node, oper, LOG_ARGS)
+#define diff_operand_add_or_sub(orig, diff, oper) \
+       _diff_operand_add_or_sub(orig, diff, oper, LOG_ARGS)
 
-#define diff_operand_sin(orig_node, diff_node) \
-       _diff_operand_sin(orig_node, diff_node, LOG_ARGS)
+#define diff_operand_sin(orig, diff) \
+       _diff_operand_sin(orig, diff, LOG_ARGS)
 
-#define diff_operand_cos(orig_node, diff_node) \
-       _diff_operand_cos(orig_node, diff_node, LOG_ARGS)
+#define diff_operand_cos(orig, diff) \
+       _diff_operand_cos(orig, diff, LOG_ARGS)
 
-#define diff_operand_tg(orig_node, diff_node) \
-       _diff_operand_tg(orig_node, diff_node, LOG_ARGS)
+#define diff_operand_tg(orig, diff) \
+       _diff_operand_tg(orig, diff, LOG_ARGS)
 
-#define diff_operand_ctg(orig_node, diff_node) \
-       _diff_operand_ctg(orig_node, diff_node, LOG_ARGS)
+#define diff_operand_ctg(orig, diff) \
+       _diff_operand_ctg(orig, diff, LOG_ARGS)
 
-#define diff_operand_arcsin_and_arccos(orig_node, diff_node, oper) \
-       _diff_operand_arcsin_and_arccos(orig_node, diff_node, oper, LOG_ARGS)
+#define diff_operand_arcsin_and_arccos(orig, diff, oper) \
+       _diff_operand_arcsin_and_arccos(orig, diff, oper, LOG_ARGS)
 
-#define diff_operand_arctg_and_arcctg(orig_node, diff_node, oper) \
-       _diff_operand_arctg_and_arcctg(orig_node, diff_node, oper, LOG_ARGS)
+#define diff_operand_arctg_and_arcctg(orig, diff, oper) \
+       _diff_operand_arctg_and_arcctg(orig, diff, oper, LOG_ARGS)
 
