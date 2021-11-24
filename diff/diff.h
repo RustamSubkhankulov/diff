@@ -7,6 +7,108 @@
 
 //===================================================================
 
+#define NODE_INIT_CONSTANT(node, value) {                           \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = node_init_constant(node, value);                  \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define NODE_INIT_VARIABLE(node, value) {                           \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = node_init_variable(node, value);                  \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define NODE_INIT_OPERAND(node, value) {                            \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = node_init_operand(node, value);                   \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define ADD_LEFT(node) {                                            \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = node_add_left_son(node);                          \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define ADD_RIGHT(node) {                                           \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = node_add_right_son(node);                         \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define ADD_LEFT_AND_RIGHT(node) {                                  \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = node_add_sons(node);                              \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define NODE_DIFF(src, dest) {                                      \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = node_diff_execute(src, dest);                     \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}   
+
+#define NODE_COPY(src, dest) {                                      \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = diff_copy_branch(src, dest);                      \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//===================================================================
+
 #ifdef DIFF_LOGS
 
     #define diff_log_report() \
@@ -147,12 +249,6 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 #define node_diff_execute(orig, diff) \
        _node_diff_execute(orig, diff, LOG_ARGS)
-
-#define diff_constant_node(orig, diff) \
-       _diff_constant_node(orig, diff, LOG_ARGS)
-
-#define diff_variable_node(orig, diff) \
-       _diff_variable_node(orig, diff, LOG_ARGS)
 
 #define diff_operand_node(orig, diff) \
        _diff_operand_node(orig, diff, LOG_ARGS)

@@ -12,26 +12,16 @@ static int _read_closing_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS
 
 static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS);
 
-static int _diff_constant_node(struct Node* orig, struct Node* diff, 
-                                                                  LOG_PARAMS);
-
-static int _diff_variable_node(struct Node* orig, struct Node* diff, 
-                                                                  LOG_PARAMS);
-
-static int  _diff_operand_node(struct Node* orig, struct Node* diff, 
-                                                                  LOG_PARAMS);
+static int  _diff_operand_node(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff, 
-                                                             int oper, LOG_PARAMS);
+                                                   int oper, LOG_PARAMS);
 
-static int _diff_operand_mul(struct Node* orig, struct Node* diff, 
-                                                                LOG_PARAMS);
+static int _diff_operand_mul(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
-static int _diff_operand_div(struct Node* orig, struct Node* diff, 
-                                                                LOG_PARAMS);
+static int _diff_operand_div(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
-static int _diff_operand_pow(struct Node* orig, struct Node* diff, 
-                                                                LOG_PARAMS);
+static int _diff_operand_pow(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 static int _diff_operand_sin(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
@@ -42,10 +32,10 @@ static int _diff_operand_tg(struct Node* orig, struct Node* diff, LOG_PARAMS);
 static int _diff_operand_ctg(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff, 
-                                                                    int oper, LOG_PARAMS);
+                                                          int oper, LOG_PARAMS);
 
 static int _diff_operand_arctg_and_arcctg(struct Node* orig, struct Node* diff, 
-                                                                   int oper, LOG_PARAMS);
+                                                         int oper, LOG_PARAMS);
 
 //===================================================================
 
@@ -717,12 +707,12 @@ int _node_diff_execute(struct Node* orig, struct Node* diff, LOG_PARAMS) {
 
         case CONSTANT: {
 
-            return diff_constant_node(orig, diff);
+            return node_init_constant(diff, 0);
         }
 
         case VARIABLE: {
 
-            return diff_variable_node(orig, diff);
+            return node_init_constant(diff, 1);
         }
 
         case OPERAND: {
@@ -735,36 +725,6 @@ int _node_diff_execute(struct Node* orig, struct Node* diff, LOG_PARAMS) {
             return -1;
         }
     }
-}
-
-//===================================================================
-
-static int _diff_constant_node(struct Node* orig, struct Node* diff, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(orig);
-    NODE_PTR_CHECK(diff);
-
-    int ret = node_init_constant(diff, 0);
-    if (ret == -1)
-        return -1;
-
-    return 0;
-}
-
-//===================================================================
-
-static int _diff_variable_node(struct Node* orig, struct Node* diff, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(orig);
-    NODE_PTR_CHECK(diff);
-
-    int ret = node_init_constant(diff, 1);
-    if (ret == -1)
-        return -1;
-
-    return 0;
 }
 
 //===================================================================
@@ -827,23 +787,14 @@ static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff,
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
-    NODE_PTR_CHECK(diff);
+    NODE_PTR_CHECK(diff);            //занести init и add в один макрос
 
-    int ret = node_init_operand(diff, (char)oper);
-    if (ret == -1)
-        return -1;
+    NODE_INIT_OPERAND(diff, (char)oper);
 
-    ret = node_add_sons(diff);
-    if (ret == -1)
-        return -1;
+    ADD_LEFT_AND_RIGHT(diff);
 
-    ret = node_diff_execute(orig->left_son, diff->left_son);
-    if (ret == -1)
-        return -1;
-
-    ret = node_diff_execute(orig->right_son, diff->right_son);
-    if (ret == -1)
-        return -1;
+    NODE_DIFF(orig-> left_son, diff->left_son );
+    NODE_DIFF(orig->right_son, diff->right_son);
 
     return 0;
 }
@@ -856,48 +807,24 @@ static int _diff_operand_mul(struct Node* orig, struct Node* diff,
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    int ret = node_init_operand(diff, ADD);
-    if (ret == -1)
-        return -1;
-        
-    ret = node_add_sons(diff);
-    if (ret == -1)
-        return -1;
+    NODE_INIT_OPERAND(diff, ADD);
 
-    struct Node* left  = diff->left_son;
-    struct Node* right = diff->right_son;
+    ADD_LEFT_AND_RIGHT(diff);
 
-    ret = node_init_operand(left, MUL);
-    if (ret == -1)
-        return -1;
+    struct Node* first = diff->left_son;
+    struct Node* second = diff->right_son;
 
-    ret = node_init_operand(right, MUL);
-    if (ret == -1)
-        return -1;
+    NODE_INIT_OPERAND(first, MUL);
+    NODE_INIT_OPERAND(second, MUL);
 
-    ret = node_add_sons(right);
-    if (ret == -1)
-        return -1;
+    ADD_LEFT_AND_RIGHT(first);
+    ADD_LEFT_AND_RIGHT(second);
 
-    ret = node_add_sons(left);
-    if (ret == -1)
-        return -1;
+    NODE_DIFF(orig->left_son , first->left_son );
+    NODE_COPY(orig->right_son, first->right_son);
 
-    ret = node_diff_execute(orig-> left_son, left-> left_son);
-    if (ret == -1)
-        return -1;
-
-    ret = diff_copy_branch (orig->right_son, left->right_son);
-    if (ret == -1)
-        return -1;
-
-    ret = diff_copy_branch (orig-> left_son, right-> left_son);
-    if (ret == -1)
-        return -1;
-
-    ret = node_diff_execute(orig->right_son, right->right_son);
-    if (ret == -1)
-        return -1;
+    NODE_COPY(orig->left_son , second->left_son );
+    NODE_DIFF(orig->right_son, second->right_son);
 
     return 0;
 }
@@ -910,75 +837,36 @@ static int _diff_operand_div(struct Node* orig, struct Node* diff,
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    int ret = node_init_operand(diff, DIV);
-    if (ret == -1)
-        return -1;
+    NODE_INIT_OPERAND(diff, DIV);
 
-    ret = node_add_sons(diff);
-    if (ret == -1)
-        return -1;
+    ADD_LEFT_AND_RIGHT(diff);
 
     struct Node* numerator   = diff-> left_son;
     struct Node* denominator = diff->right_son;
 
-    ret = node_init_operand(numerator, SUB);
-    if (ret == -1)
-        return -1;
+    NODE_INIT_OPERAND(numerator,   SUB);
+    NODE_INIT_OPERAND(denominator, POW);
 
-    ret = node_init_operand(denominator, POW);
-    if (ret == -1)
-        return -1;
+    ADD_LEFT_AND_RIGHT(numerator  );
+    ADD_LEFT_AND_RIGHT(denominator);
 
-    ret = node_add_sons(denominator);
-    if (ret == -1)
-        return -1;
-
-    ret = diff_copy_branch(orig->right_son, denominator->left_son);
-    if (ret == -1)
-        return -1;
-
-    ret = node_init_constant(denominator->right_son, 2);
-    if (ret == -1)
-        return -1;
-
-    ret = node_add_sons(numerator);
-    if (ret == -1)
-        return -1;
+    NODE_COPY(orig->right_son, denominator->left_son);
+    NODE_INIT_CONSTANT(denominator->right_son, 2    );
 
     struct Node* numer_first  = numerator-> left_son;
     struct Node* numer_second = numerator->right_son;
 
-    ret = node_init_operand(numer_first, MUL);
-    if (ret == -1)
-        return -1;
+    NODE_INIT_OPERAND(numer_first,  MUL);
+    NODE_INIT_OPERAND(numer_second, MUL);
 
-    ret = node_init_operand(numer_second, MUL);
-    if (ret == -1)
-        return -1;
+    ADD_LEFT_AND_RIGHT(numer_first );
+    ADD_LEFT_AND_RIGHT(numer_second);
 
-    ret = node_add_sons(numer_first);
-    if (ret == -1)
-        return -1;
+    NODE_DIFF(orig->left_son,  numer_first->left_son);
+    NODE_COPY(orig->right_son, numer_first->right_son);
 
-    ret = node_add_sons(numer_second);
-    if (ret == -1)
-        return -1;
-
-    ret = node_diff_execute(orig-> left_son, numer_first-> left_son);
-    if (ret == -1)
-        return -1;
-
-    ret = diff_copy_branch (orig->right_son, numer_first->right_son);
-    if (ret == -1)
-        return -1;
-
-    ret = diff_copy_branch( orig-> left_son, numer_second-> left_son);
-    if (ret == -1)
-        return -1;
-
-    ret = node_diff_execute(orig->right_son, numer_second->right_son);
-    if (ret == -1)
-        return -1;
+    NODE_COPY(orig->left_son , numer_second-> left_son);
+    NODE_DIFF(orig->right_son, numer_second->right_son);
 
     return 0;
 }
