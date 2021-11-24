@@ -67,6 +67,29 @@ int _print_node_data_type(struct Node* node, FILE* output, LOG_PARAMS) {
 
 //===================================================================
 
+int _print_operand(int oper_code, FILE* output, LOG_PARAMS) {
+
+    if (output == NULL) {
+
+        error_report(INV_FILE_PTR);
+        return -1;
+    }
+
+    for (int counter = 0; counter < Functions_number;  counter++) {
+
+        if (oper_code == Functions[counter].code) {
+
+            fprintf(output, "%s", Functions[counter].name);
+            return 0;
+        }
+    }
+
+    fprintf(output, "%c", oper_code);
+    return 0;
+}
+
+//===================================================================
+
 int _print_node_data(struct Node* node, FILE* output, LOG_PARAMS) {
 
     //tree_log_report();
@@ -94,8 +117,7 @@ int _print_node_data(struct Node* node, FILE* output, LOG_PARAMS) {
 
         case OPERAND: {
 
-            fprintf(output, "%c", node->data.operand);
-            break;
+            return print_operand(node->data.operand, output);
         }
 
         default: {
@@ -528,7 +550,7 @@ int _node_init_variable(struct Node* node, char var, LOG_PARAMS) {
 
 //===================================================================
 
-int _node_init_operand(struct Node* node, char oper, LOG_PARAMS) {
+int _node_init_operand(struct Node* node, int oper, LOG_PARAMS) {
 
     tree_log_report();
     NODE_PTR_CHECK(node);
@@ -735,7 +757,7 @@ int symb_is_var_name(char symb) {
 
 //===================================================================
 
-int symb_is_operand(char symb) {
+int symb_is_operand(int symb) {
 
     for (int counter = 0; 
              counter < Operands_number; 
@@ -813,7 +835,7 @@ int _node_print(struct Node* node, LOG_PARAMS) {
     err_val = print_node_data_type(node, logs_file); $
 
     fprintf(logs_file, ">\n ""Left son: <%p> Right son: <%p> Parent: <%p>\n",
-                                                              node->left_son, 
+                                                             node-> left_son, 
                                                              node->right_son,
                                                                node->parent);
     fprintf(logs_file, "</pre></div>");

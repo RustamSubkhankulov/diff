@@ -6,6 +6,8 @@
 
 const int Console_input_buf_size = 200;
 
+const int Function_name_buf_size = 20;
+
 //===================================================================
 
 #define DIFF_LOGS

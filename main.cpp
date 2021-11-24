@@ -11,6 +11,9 @@ int main(int, char* argv[]) {
     if (logs_file == NULL)
         return -1;
 
+    for (int ct = 0; ct < Functions_number; ct++)
+        printf("\n\n %s %d \n\n", Functions[ct].name, Functions[ct]. code);
+
     struct Tree tree = { 0 };
 
     int err_val = diff_tree_ctor(&tree); $

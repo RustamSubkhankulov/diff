@@ -12,8 +12,8 @@ struct Node * const No_parent = (struct Node*)993;
 union Data {
 
     double constant;
-    char variable;
-    char operand;
+    char   variable;
+    int    operand ;
 };
 
 //===================================================================
@@ -93,6 +93,7 @@ struct Buffer_struct {
             int is_ok = tree_validator(tree);                       \
             if (is_ok == -1)                                        \
                 return -1;                                          \
+                                                                    \
         } while(0);                                                 \
     }
 
@@ -197,13 +198,18 @@ int _node_init_constant(struct Node* node, double value, LOG_PARAMS);
 
 int _node_init_variable(struct Node* node, char var, LOG_PARAMS);
 
-int _node_init_operand(struct Node* node, char oper, LOG_PARAMS);
+int _node_init_operand(struct Node* node, int oper, LOG_PARAMS);
+
+int _print_operand(int oper_code, FILE* output, LOG_PARAMS);
 
 int symb_is_var_name(char symb);
 
-int symb_is_operand(char symb);
+int symb_is_operand(int symb);
 
 //===================================================================
+
+#define print_operand(oper_code, output) \
+       _print_operand(oper_code, output, LOG_ARGS)
 
 #define print_node_data_type(node, output) \
        _print_node_data_type(node, output, LOG_ARGS)

@@ -8,6 +8,10 @@
 
 //===================================================================
 
+static int _read_closing_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS);
+
+static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS);
+
 static int _diff_constant_node(struct Node* orig_node, struct Node* diff_node, 
                                                                   LOG_PARAMS);
 
@@ -85,6 +89,10 @@ char* _diff_read_from_file(struct Tree* tree, const char* filename, LOG_PARAMS) 
         free(buffer);
         return NULL;
     }
+
+    int is_ok = tree_validator(tree);
+    if (is_ok == -1)
+        return NULL;
     
     return buffer;
 }
@@ -184,10 +192,59 @@ int _buffer_struct_init(struct Buffer_struct* buffer_struct, char* buffer,
 
 //===================================================================
 
-static int _read_constant(struct Node* node, struct Buffer_struct* buffer_struct, 
-                                                                         LOG_PARAMS) {
+static int _read_function(struct Node* node, struct Buffer_struct* buffer_struct, 
+                                                                       LOG_PARAMS) {
 
-    tree_log_report();
+    diff_log_report();
+    NODE_PTR_CHECK(node);
+    BUFFER_STRUCT_PTR_CHECK(buffer_struct);
+
+    char buffer[Function_name_buf_size] = { 0 };
+    int offset = 0;
+
+    int scanned = sscanf(buffer_struct->buffer + buffer_struct->pos, " %s %n", 
+                                                                buffer, &offset);
+    if (!scanned) {
+
+        error_report(TEXT_PROCESSING_ERR);
+        return -1;
+    }
+
+    int64_t hash = get_hash(buffer, strlen(buffer));
+    printf("\n\n hash %ld strlen %d dara |%s|\n\n", hash, strlen(buffer), buffer);
+
+    for (int counter = 0; counter < Functions_number; counter++) {
+
+        if (hash == Functions[counter].hash) {
+
+            int ret = node_init_operand(node, Functions[counter].code);
+            if (ret == -1)
+                return -1;
+
+            buffer_struct->pos += offset;
+
+            ret = node_add_left_son(node);
+            if (ret == -1)
+                return -1;
+
+            ret = node_read_from_buffer(node->left_son, buffer_struct);
+            if (ret == -1)
+                return -1;
+
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+//===================================================================
+
+static int _read_constant(struct Node* node, struct Buffer_struct* buffer_struct, 
+                                                                      LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(node);
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
     double constant = 0;
@@ -215,8 +272,9 @@ static int _read_constant(struct Node* node, struct Buffer_struct* buffer_struct
 static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struct, 
                                                                        LOG_PARAMS) {
 
-    tree_log_report();
+    diff_log_report();
     NODE_PTR_CHECK(node);
+    BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
     char symb = 0;
     int offset = 0;
@@ -235,6 +293,13 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
 
         case 1: {
 
+            int ret = read_function(node, buffer_struct);
+            if (ret == -1)
+                return -1;
+
+            if (ret == 1)
+                break;
+
             if (symb_is_var_name(symb)) {
 
                 int ret = node_init_variable(node, symb);
@@ -247,9 +312,9 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
                 //
             }
 
-            else if (symb_is_operand(symb)) {
+            else if (symb_is_operand((int)symb)) {
 
-                int ret = node_init_operand(node, symb);
+                int ret = node_init_operand(node, (int)symb);
                 if (ret == -1)
                     return -1;
 
@@ -290,8 +355,9 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
 static int _read_node_with_children(struct Node* node, struct Buffer_struct* buffer_struct, 
                                                                                 LOG_PARAMS) {
 
-    tree_log_report();
+    diff_log_report();
     NODE_PTR_CHECK(node);
+    BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
     node->data_type = OPERAND;
 
@@ -330,7 +396,7 @@ static int _read_node_with_children(struct Node* node, struct Buffer_struct* buf
 
 static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS) {
 
-    tree_log_report();
+    diff_log_report();
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
     int offset = 0;
@@ -371,7 +437,7 @@ static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS
 
 static int _read_closing_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS) {
 
-    tree_log_report();
+    diff_log_report();
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
     int offset = 0;
@@ -412,7 +478,7 @@ static int _read_closing_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS
 int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struct, 
                                                                        LOG_PARAMS) {
 
-    tree_log_report();
+    diff_log_report();
     NODE_PTR_CHECK(node);
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
@@ -548,6 +614,10 @@ char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS) {
         return NULL;
     }
 
+    int is_ok = tree_validator(tree);
+    if (is_ok == -1)
+        return NULL;
+
     return buffer;   
 }
 
@@ -610,6 +680,9 @@ int _node_diff_execute(struct Node* orig_node, struct Node* diff_node, LOG_PARAM
     NODE_PTR_CHECK(orig_node);
     NODE_PTR_CHECK(diff_node);
 
+    if (orig_node->parent == No_parent)
+        diff_node->parent =  No_parent;
+
     switch(orig_node->data_type) {
 
         case CONSTANT: {
@@ -646,9 +719,6 @@ static int _diff_constant_node(struct Node* orig_node, struct Node* diff_node, L
     if (ret == -1)
         return -1;
 
-    if (orig_node->parent == No_parent)
-        diff_node->parent =  No_parent;
-
     return 0;
 }
 
@@ -664,9 +734,6 @@ static int _diff_variable_node(struct Node* orig_node, struct Node* diff_node, L
     if (ret == -1)
         return -1;
 
-    if (orig_node->parent == No_parent)
-        diff_node->parent =  No_parent;
-
     return 0;
 }
 
@@ -678,7 +745,7 @@ static int _diff_operand_node(struct Node* orig_node, struct Node* diff_node, LO
     NODE_PTR_CHECK(orig_node);
     NODE_PTR_CHECK(diff_node);
 
-    char operand = orig_node->data.operand;
+    int operand = orig_node->data.operand;
 
     switch(operand) {
 
@@ -712,9 +779,6 @@ static int _diff_operand_add_or_sub(struct Node* orig_node, struct Node* diff_no
     NODE_PTR_CHECK(orig_node);
     NODE_PTR_CHECK(diff_node);
 
-    if (orig_node->parent == No_parent)
-        diff_node->parent =  No_parent;
-
     int ret = node_init_operand(diff_node, (char)oper);
     if (ret == -1)
         return -1;
@@ -741,9 +805,6 @@ static int _diff_operand_mul(struct Node* orig_node, struct Node* diff_node,
     diff_log_report();
     NODE_PTR_CHECK(orig_node);
     NODE_PTR_CHECK(diff_node);
-
-    if (orig_node->parent == No_parent)
-        diff_node->parent =  No_parent;
 
     int ret = node_init_operand(diff_node, ADD);
     if (ret == -1)
@@ -798,9 +859,6 @@ static int _diff_operand_div(struct Node* orig_node, struct Node* diff_node,
     diff_log_report();
     NODE_PTR_CHECK(orig_node);
     NODE_PTR_CHECK(diff_node);
-
-    if (orig_node->parent == No_parent)
-        diff_node->parent =  No_parent;
 
     int ret = node_init_operand(diff_node, DIV);
     if (ret == -1)

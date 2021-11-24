@@ -52,20 +52,53 @@
 
 //===================================================================
 
+struct Function {
+
+       int code;
+       int64_t hash;
+       const char* name;
+};
+
+static struct Function Functions[] {
+
+       { 7563630   , 3141473398, "sin"  },
+       { 6516595   , 2519927297, "cos"  },
+       { 29799     , 1173106379, "tg"   },
+       { 6517863   , 3865010701, "ctg"  },
+       { 1633906547, 1322787422, "acos" },
+       { 1634953582, 2736860584, "asin" },
+       { 6386791   , 3546035762, "atg"  },
+       { 1633907815, 815273638 , "actg" }
+};
+
+const int Functions_number = 8;
+
+//-------------------------------------------------------------------
+
 enum operands {
 
-       ADD = '+',
-       SUB = '-',
-       MUL = '*',
-       DIV = '/',
-       POW = '^'
+       ADD    = '+'        ,
+       SUB    = '-'        ,
+       MUL    = '*'        ,
+       DIV    = '/'        ,
+       POW    = '^'        ,
+       SIN    = 7563630    ,
+       COS    = 6516595    ,
+       TG     = 29799      ,
+       CTG    = 6517863    ,
+       ACOS   = 1633906547 ,
+       ASIN   = 1634953582 ,
+       ATG    = 6386791    ,
+       ACTG   = 1633907815
 };
 
 //===================================================================
 
-const int Operands_number = 5;
+const int Operands_number = 13;
 
-const char Operands[Operands_number] = {ADD, SUB, MUL, DIV, POW};
+const int Operands[Operands_number] = {ADD , SUB , MUL, DIV, POW, 
+                                       SIN , COS , TG , CTG, 
+                                       ACOS, ASIN, ATG, ACTG};
 
 //===================================================================
 
@@ -147,6 +180,9 @@ int _diff_copy_branch(struct Node* orig_node, struct Node* diff_node, LOG_PARAMS
 
 #define read_constant(node, buffer_struct) \
        _read_constant(node, buffer_struct, LOG_ARGS)
+
+#define read_function(node, buffer_struct) \
+       _read_function(node, buffer_struct, LOG_ARGS)
 
 #define read_closing_bracket(buffer_struct) \
        _read_closing_bracket(buffer_struct, LOG_ARGS)
