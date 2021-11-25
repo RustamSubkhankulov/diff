@@ -6,6 +6,10 @@
 
 //===================================================================
 
+const double Precise = 0.000001; 
+
+//===================================================================
+
 #define GENERAL_LOGS
 
 //===================================================================
@@ -90,6 +94,8 @@
 //===================================================================
 
 int _clearstdin(LOG_PARAMS);
+
+int double_is_equal(double first, double second);
 
 void* _my_recalloc(void* ptr, size_t number, size_t prev_number, size_t size_of_elem,
                                                                          LOG_PARAMS);

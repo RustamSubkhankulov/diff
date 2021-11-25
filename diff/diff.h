@@ -85,6 +85,135 @@
 
 //-------------------------------------------------------------------
 
+#define ADD_OPERAND(node, son, code) {                              \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        switch(son) {                                               \
+                                                                    \
+            case LEFT: {                                            \
+                                                                    \
+                int ret = node_add_left_son(node);                  \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                ret = node_init_operand(node->left_son, code);      \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                break;                                              \
+            }                                                       \
+                                                                    \
+            case RIGHT: {                                           \
+                                                                    \
+                int ret = node_add_right_son(node);                 \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                ret = node_init_operand(node->right_son, code);     \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                break;                                              \
+            }                                                       \
+                                                                    \
+            default: {                                              \
+                                                                    \
+                error_report(INV_ADD_PARAMETER);                    \
+                return -1;                                          \
+            }                                                       \
+        }                                                           \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define ADD_CONSTANT(node, son, constant) {                         \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        switch(son) {                                               \
+                                                                    \
+            case LEFT: {                                            \
+                                                                    \
+                int ret = node_add_left_son(node);                  \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                ret = node_init_constant(node->left_son, constant); \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                break;                                              \
+            }                                                       \
+                                                                    \
+            case RIGHT: {                                           \
+                                                                    \
+                int ret = node_add_right_son(node);                 \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                ret = node_init_constant(node->right_son, constant);\
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                break;                                              \
+            }                                                       \
+                                                                    \
+            default: {                                              \
+                                                                    \
+                error_report(INV_ADD_PARAMETER);                    \
+                return -1;                                          \
+            }                                                       \
+        }                                                           \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define ADD_VARIABLE(node, son, var) {                              \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        switch(son) {                                               \
+                                                                    \
+            case LEFT: {                                            \
+                                                                    \
+                int ret = node_add_left_son(node);                  \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                ret = node_init_variable(node->left_son, var);      \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                break;                                              \
+            }                                                       \
+                                                                    \
+            case RIGHT: {                                           \
+                                                                    \
+                int ret = node_add_right_son(node);                 \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                ret = node_init_variable(node->right_son, var);     \
+                if (ret == -1)                                      \
+                    return -1;                                      \
+                                                                    \
+                break;                                              \
+            }                                                       \
+                                                                    \
+            default: {                                              \
+                                                                    \
+                error_report(INV_ADD_PARAMETER);                    \
+                return -1;                                          \
+            }                                                       \
+        }                                                           \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
 #define NODE_DIFF(src, dest) {                                      \
                                                                     \
     do                                                              \
@@ -177,7 +306,7 @@ const int Functions_number = 8;
 
 //-------------------------------------------------------------------
 
-enum operands {
+enum Operands {
 
        ADD    = '+'        ,
        SUB    = '-'        ,
@@ -201,6 +330,14 @@ const int Operands_number = 13;
 const int Operands[Operands_number] = {ADD , SUB , MUL, DIV, POW, 
                                        SIN , COS , TG , CTG, 
                                        ACOS, ASIN, ATG, ACTG};
+
+//===================================================================
+
+enum Node_add_parameters {
+
+    LEFT   = 1488,
+    RIGHT  = 1489
+};
 
 //===================================================================
 
@@ -324,4 +461,31 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 #define diff_operand_arctg_and_arcctg(orig, diff, oper) \
        _diff_operand_arctg_and_arcctg(orig, diff, oper, LOG_ARGS)
+
+#define node_simplify(node) \
+       _node_simplify(node, LOG_ARGS)
+
+#define constant_folding(node) \
+       _constant_folding(node, LOG_ARGS)
+
+#define cut_nodes(node) \
+       _cut_nodes(node, LOG_ARGS)
+
+#define calc_operand_value(node) \
+       _calc_operand_value(node, LOG_ARGS)
+
+#define calc_function_value(node) \
+       _calc_function_value(node, LOG_ARGS)
+
+#define is_zero_node(node) \
+       _is_zero_node(node, LOG_ARGS)
+
+#define is_one_node(node) \
+       _is_one_node(node, LOG_ARGS)
+
+#define zero_cut(node) \
+       _zero_cut(node, LOG_ARGS)
+
+#define one_cut(node) \
+       _one_cut(node, LOG_ARGS)  
 

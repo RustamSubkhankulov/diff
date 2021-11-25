@@ -528,3 +528,12 @@ False call of diff function - not matching type of node data)
 
 DEF_ERR(825, DIFF_INV_OPERAND,
 Unknown operand in operand node)
+
+DEF_ERR(826, DIV_BY_ZERO,
+Cannot divide by zero)
+
+DEF_ERR(827, INV_ADD_PARAMETER,
+Invalid add parameter)
+
+DEF_ERR(828, INV_SONS_FUNCTION_OPERAND,
+Left son for function operand in NULL)

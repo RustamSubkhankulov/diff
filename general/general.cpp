@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #include "general.h"
 
@@ -270,4 +271,11 @@ int64_t get_hash_(void* void_base, long unsigned int len, LOG_PARAMS) {
     h ^= h >> 15;
 
     return h;
+}
+
+//===================================================================
+
+int double_is_equal(double first, double second) {
+
+    return (fabs(first - second) < Precise);
 }

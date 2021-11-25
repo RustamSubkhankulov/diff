@@ -799,24 +799,34 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
     fflush(logs_file);
     NODE_PTR_CHECK(node);
 
+    int err_val  = 0;
+
     if (node->data_type == OPERAND 
     && (node->left_son == NULL && node->right_son == NULL)) {
 
         error_report(OPER_NO_SONS);
-        return -1;
+        err_val++;
+    }
+
+    if (node->data_type == OPERAND
+    && is_function_operand(node)
+    && node->left_son == NULL) {
+
+        error_report(INV_SONS_FUNCTION_OPERAND);
+        error_val++;
     }
 
     if ((node->data_type == CONSTANT || node->data_type == VARIABLE) 
      && (node->right_son != NULL     || node->left_son  != NULL)) {
 
         error_report(NODE_NO_SONS);
-        return -1;
+        error_val++;
     }
 
     if (node->data_type == VARIABLE && !symb_is_var_name(node->data.variable)) {
 
         error_report(INV_VAR_NAME);
-        return -1;
+        error_report++;
     }
 
     if (node->right_son != NULL 
@@ -824,20 +834,23 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
      && node->left_son == node->right_son) {
 
         error_report(NODE_EQUAL_SONS);
-        return -1;
+        error_val++;
     }
 
-    if (node->parent != No_parent) {
+    if (node->parent   != No_parent
+    && node->parent    != NULL
+    && node->left_son  != NULL
+    && node->right_son != NULL) {
 
         if (node->parent->left_son  != node 
          && node->parent->right_son != node) {
 
             error_report(NODE_INV_PARENT);
-            return -1;
+            error_val++;
         }
     }
 
-    return 0; 
+    return (err_val) -1: 0; 
 }
 
 //===================================================================
