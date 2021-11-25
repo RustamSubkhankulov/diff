@@ -38,11 +38,11 @@ static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff,
 static int _diff_operand_arctg_and_arcctg(struct Node* orig, struct Node* diff, 
                                                          int oper, LOG_PARAMS);
 
-static int _node_simplify(struct Node* node, LOG_PARAMS);
+static int _node_simplify(struct Tree* diff, LOG_PARAMS);
 
 static int _constant_folding(struct Node* node, LOG_PARAMS);
 
-static int _cut_nodes(struct Node* node, LOG_PARAMS);
+static int _cut_nodes(struct Tree* diff, struct Node* node, LOG_PARAMS);
 
 static int _calc_operand_value(struct Node* node, LOG_PARAMS);
 
@@ -52,9 +52,9 @@ static int _is_zero_node(struct Node* node, LOG_PARAMS);
 
 static int _is_one_node(struct Node* node, LOG_PARAMS);
 
-static int _zero_cut(struct Node* node, LOG_PARAMS);
+static int _mul_by_zero(struct Node* node, LOG_PARAMS);
 
-static int _one_cut (struct Node* node, LOG_PARAMS);
+static int _cut_constant(struct Tree* diff, struct Node* node, LOG_PARAMS);
 
 //===================================================================
 
@@ -718,7 +718,7 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
 
     do 
     {
-        ret = node_simplify(diff->root);
+        ret = node_simplify(diff);
         if (ret == -1)
             return -1;
 
@@ -729,16 +729,16 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
 
 //===================================================================
 
-static int _node_simplify(struct Node* root, LOG_PARAMS) {
+static int _node_simplify(struct Tree* diff, LOG_PARAMS) {
 
     diff_log_report();              //изменить на tree
-    NODE_PTR_CHECK(root);
+    TREE_PTR_CHECK(diff);
 
-    int constant_simp = constant_folding(root);
+    int constant_simp = constant_folding(diff->root);
     if (constant_simp == -1)
         return -1;
 
-    int cut_nodes = cut_nodes(root);
+    int cut_nodes = cut_nodes(diff, diff->root);
     if (cut_nodes == -1)
         return -1;
 
@@ -961,7 +961,8 @@ static int _is_zero_node(struct Node* node, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(node);
 
-    if (node->data_type == CONSTANT && node->data.constant == 0)
+    if (node->data_type == CONSTANT 
+     && double_is_equal(node->data.constant, 0))
         return 1;
     else
         return 0;
@@ -971,7 +972,8 @@ static int _is_zero_node(struct Node* node, LOG_PARAMS) {
 
 static int _is_one_node(struct Node* node, LOG_PARAMS) {
 
-    if (node->data_type == CONSTANT && node->data.constant == 1)
+    if (node->data_type == CONSTANT 
+     && double_is_equal(node->data.constant, 1))
         return 1;
     else
         return 0;
@@ -979,7 +981,7 @@ static int _is_one_node(struct Node* node, LOG_PARAMS) {
 
 //===================================================================
 
-static int _zero_cut(struct Node* node, LOG_PARAMS) {
+static int _replace_with_const(struct Node* node, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(node);
@@ -1004,43 +1006,69 @@ static int _zero_cut(struct Node* node, LOG_PARAMS) {
 
 //===================================================================
 
-static int _one_cut (struct Node* node, LOG_PARAMS) {
+static int _cut_constant(struct Tree* diff, struct Node* node, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(node);
+    TREE_PTR_CHECK(diff);
 
     struct Node* expression = NULL;
+    struct Node* constant   = NULL;
 
-    if (!is_one_node(node->left_son))
+    if (node->right_son->data_type == CONSTANT) {
+
         expression = node->left_son;
-    else
-        expression = node->right_son;
+        constant   = node->right_son;
+    }
 
+    else {
+        
+        expression = node->right_son;
+        constant   = node->left_son;
+    }
     expression->parent = node->parent;
+
+    if (expression->parent == No_parent)
+        diff->root = expression;
+
+    else if (node == node->parent->left_son)
+        node->parent->left_son  = expression;
+        
+    else if (node == node->parent->right_son)
+        node->parent->right_son = expression;
+
+    int ret = node_destruct(constant);
+    if (ret == -1)
+        return -1;
+
+    ret = node_destruct(node);
+    if (ret == -1)
+        return -1;
 
     return 1;
 }
 
 //===================================================================
 
-static int _cut_nodes(struct Node* node, LOG_PARAMS) {
+static int _cut_nodes(struct Tree* diff, struct Node* node, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(node);
+    TREE_PTR_CHECK(diff);
 
     int left  = 0;
     int right = 0;
 
     if (node->left_son) {
 
-        left = cut_nodes(node->left_son);
+        left = cut_nodes(diff, node->left_son);
         if (left == -1)
             return -1;
     }
 
     if (node->right_son) {
 
-        right = cut_nodes(node->right_son);
+        right = cut_nodes(diff, node->right_son);
         if (right == -1)
             return -1;
     }
@@ -1049,21 +1077,42 @@ static int _cut_nodes(struct Node* node, LOG_PARAMS) {
     int one_cut  = 0;
 
     if (node->data_type == OPERAND
-    && node->data.operand == MUL
+    &&  node->data.operand == MUL
     && (is_zero_node(node->left_son) 
      || is_zero_node(node->right_son))) {
 
-         zero_cut = zero_cut(node);
+         zero_cut = mul_by_zero(node);
          if (zero_cut == -1)
             return -1;
     }
 
     if (node->data_type == OPERAND
-    && node->data.operand == MUL
+    &&  node->data.operand == MUL
     && (is_one_node(node->left_son) 
      || is_one_node(node->right_son))) {
 
-         one_cut = one_cut(node);
+         one_cut = cut_constant(diff, node);
+         if (one_cut == -1)
+            return -1;
+    }
+
+    if (node->data_type == OPERAND
+    && (node->data.operand == ADD
+     || node->data.operand == SUB)
+    && (is_zero_node(node->left_son) 
+     || is_zero_node(node->right_son))) {
+
+         one_cut = cut_constant(diff, node);
+         if (one_cut == -1)
+            return -1;
+    }
+
+    if (node->data_type == OPERAND
+    &&  node->data.operand == POW
+    && (is_one_node(node->left_son) 
+     || is_one_node(node->right_son))) {
+
+         one_cut = cut_constant(diff, node);
          if (one_cut == -1)
             return -1;
     }

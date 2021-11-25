@@ -462,14 +462,14 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 #define diff_operand_arctg_and_arcctg(orig, diff, oper) \
        _diff_operand_arctg_and_arcctg(orig, diff, oper, LOG_ARGS)
 
-#define node_simplify(node) \
-       _node_simplify(node, LOG_ARGS)
+#define node_simplify(diff) \
+       _node_simplify(diff, LOG_ARGS)
 
 #define constant_folding(node) \
        _constant_folding(node, LOG_ARGS)
 
-#define cut_nodes(node) \
-       _cut_nodes(node, LOG_ARGS)
+#define cut_nodes(diff, node) \
+       _cut_nodes(diff, node, LOG_ARGS)
 
 #define calc_operand_value(node) \
        _calc_operand_value(node, LOG_ARGS)
@@ -483,9 +483,9 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 #define is_one_node(node) \
        _is_one_node(node, LOG_ARGS)
 
-#define zero_cut(node) \
-       _zero_cut(node, LOG_ARGS)
+#define replace_with_const(node) \
+       _replace_with_const(node, LOG_ARGS)
 
-#define one_cut(node) \
-       _one_cut(node, LOG_ARGS)  
+#define cut_constant(diff, node) \
+       _cut_constant(diff, node, LOG_ARGS)  
 

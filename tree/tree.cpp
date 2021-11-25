@@ -813,20 +813,20 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
     && node->left_son == NULL) {
 
         error_report(INV_SONS_FUNCTION_OPERAND);
-        error_val++;
+        err_val++;
     }
 
     if ((node->data_type == CONSTANT || node->data_type == VARIABLE) 
      && (node->right_son != NULL     || node->left_son  != NULL)) {
 
         error_report(NODE_NO_SONS);
-        error_val++;
+        err_val++;
     }
 
     if (node->data_type == VARIABLE && !symb_is_var_name(node->data.variable)) {
 
         error_report(INV_VAR_NAME);
-        error_report++;
+        err_val++;
     }
 
     if (node->right_son != NULL 
@@ -834,7 +834,7 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
      && node->left_son == node->right_son) {
 
         error_report(NODE_EQUAL_SONS);
-        error_val++;
+        err_val++;
     }
 
     if (node->parent   != No_parent
@@ -846,11 +846,11 @@ int _node_validator(struct Node* node, LOG_PARAMS) {
          && node->parent->right_son != node) {
 
             error_report(NODE_INV_PARENT);
-            error_val++;
+            err_val++;
         }
     }
 
-    return (err_val) -1: 0; 
+    return (err_val)? -1: 0; 
 }
 
 //===================================================================
