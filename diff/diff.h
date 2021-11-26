@@ -483,8 +483,8 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 #define is_one_node(node) \
        _is_one_node(node, LOG_ARGS)
 
-#define replace_with_const(node) \
-       _replace_with_const(node, LOG_ARGS)
+#define replace_with_const(node, constant) \
+       _replace_with_const(node, constant, LOG_ARGS)
 
 #define cut_constant(diff, node) \
        _cut_constant(diff, node, LOG_ARGS)  
