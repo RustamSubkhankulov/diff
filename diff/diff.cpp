@@ -38,7 +38,7 @@ static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff,
 static int _diff_operand_arctg_and_arcctg(struct Node* orig, struct Node* diff, 
                                                          int oper, LOG_PARAMS);
 
-static int _node_simplify(struct Tree* diff, LOG_PARAMS);
+static int _tree_simplify(struct Tree* diff, LOG_PARAMS);
 
 static int _constant_folding(struct Node* node, LOG_PARAMS);
 
@@ -48,13 +48,14 @@ static int _calc_operand_value(struct Node* node, LOG_PARAMS);
 
 static int _calc_function_value(struct Node* node, LOG_PARAMS);
 
-static int _is_zero_node(struct Node* node, LOG_PARAMS);
+static Node* _is_zero_node(struct Node* node, LOG_PARAMS);
 
-static int _is_one_node(struct Node* node, LOG_PARAMS);
+static Node* _is_one_node(struct Node* node, LOG_PARAMS);
 
 static int _replace_with_const(struct Node* node, double constant, LOG_PARAMS);
 
-static int _cut_constant(struct Tree* diff, struct Node** node, LOG_PARAMS);
+static int _cut_constant(struct Tree* diff, struct Node** node, struct Node* cutted, 
+                                                                        LOG_PARAMS);
 
 //===================================================================
 
@@ -710,7 +711,17 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
     TREE_PTR_CHECK(tree);
     TREE_PTR_CHECK(diff);
 
-    int ret = node_diff_execute(tree->root, diff->root);
+    int ret = 0;
+
+    do 
+    {
+        ret = tree_simplify(diff);
+        if (ret == -1)
+            return -1;
+
+    } while(0);
+
+    ret = node_diff_execute(tree->root, diff->root);
     if (ret == -1)
         return -1;
 
@@ -718,20 +729,18 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
 
     do 
     {
-        ret = node_simplify(diff);
+        ret = tree_simplify(diff);
         if (ret == -1)
             return -1;
 
     } while(ret == 1);
-
-    tree_draw_graph(diff);
 
     return 0;
 }
 
 //===================================================================
 
-static int _node_simplify(struct Tree* diff, LOG_PARAMS) {
+static int _tree_simplify(struct Tree* diff, LOG_PARAMS) {
 
     diff_log_report();              //изменить на tree
     TREE_PTR_CHECK(diff);
@@ -916,33 +925,40 @@ static int _constant_folding(struct Node* node, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(node);
 
-    int left  = 0;
-    int right = 0;
+    int ret = 0;
+    int is_simplified = 0;
 
     if (node->left_son) {
 
-        left = constant_folding(node->left_son);
-        if (left == -1)
+        ret = constant_folding(node->left_son);
+        if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
     if (node->right_son) {
 
-        right = constant_folding(node->right_son);
-        if (right == -1)
+        ret = constant_folding(node->right_son);
+        if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
-    int calc_oper = 0;
-    int calc_func = 0;
-
     if (node->data_type == OPERAND 
+     && !is_function_operand(node)
      && node->left_son ->data_type == CONSTANT 
      && node->right_son->data_type == CONSTANT) {
 
-        calc_oper = calc_operand_value(node);
-        if (calc_oper == -1)
+        ret = calc_operand_value(node);
+        if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
     if (node->data_type == OPERAND
@@ -950,37 +966,53 @@ static int _constant_folding(struct Node* node, LOG_PARAMS) {
     && node->left_son != NULL
     && node->left_son->data_type == CONSTANT) {
 
-        calc_func = calc_function_value(node);
-        if (calc_func == -1)
+        ret = calc_function_value(node);
+        if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
-    return (left || right || calc_func || calc_oper);
+    return is_simplified;
 }
 
 //===================================================================
 
-static int _is_zero_node(struct Node* node, LOG_PARAMS) {
+static Node* _is_zero_node(struct Node* node, LOG_PARAMS) {
 
     diff_log_report();
-    NODE_PTR_CHECK(node);
+    if (!node)
+        return NULL;
 
-    if (node->data_type == CONSTANT 
-     && double_is_equal(node->data.constant, 0))
-        return 1;
-    else
-        return 0;
+    if (node->left_son->data_type == CONSTANT 
+     && double_is_equal(node->left_son->data.constant, 0))
+        return node->left_son;
+    
+    if (node->right_son->data_type == CONSTANT 
+     && double_is_equal(node->right_son->data.constant, 0))
+        return node->right_son;
+
+    return NULL;
 }
 
 //===================================================================
 
-static int _is_one_node(struct Node* node, LOG_PARAMS) {
+static Node* _is_one_node(struct Node* node, LOG_PARAMS) {
 
-    if (node->data_type == CONSTANT 
-     && double_is_equal(node->data.constant, 1))
-        return 1;
-    else
-        return 0;
+    diff_log_report();
+    if (!node)
+        return NULL;
+
+    if (node->left_son->data_type == CONSTANT 
+     && double_is_equal(node->left_son->data.constant, 1))
+        return node->left_son;
+    
+    if (node->right_son->data_type == CONSTANT 
+     && double_is_equal(node->right_son->data.constant, 1))
+        return node->right_son;
+
+    return NULL;
 }
 
 //===================================================================
@@ -1010,7 +1042,8 @@ static int _replace_with_const(struct Node* node, double constant, LOG_PARAMS) {
 
 //===================================================================
 
-static int _cut_constant(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) {
+static int _cut_constant(struct Tree* diff, struct Node** node_ptr, struct Node* cutted, 
+                                                                             LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(node_ptr);
@@ -1019,19 +1052,11 @@ static int _cut_constant(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) 
     struct Node* node = *node_ptr;
 
     struct Node* expression = NULL;
-    struct Node* constant   = NULL;
 
-    if (node->right_son->data_type == CONSTANT) {
-
+    if (node->left_son != cutted)
         expression = node->left_son;
-        constant   = node->right_son;
-    }
-
-    else {
-        
+    else 
         expression = node->right_son;
-        constant   = node->left_son;
-    }
 
     *node_ptr = expression;
     (*node_ptr)->parent = node->parent;
@@ -1045,7 +1070,7 @@ static int _cut_constant(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) 
     else if (node == node->parent->right_son)
         node->parent->right_son = expression;
 
-    int ret = node_destruct(constant);
+    int ret = node_destruct(cutted);
     if (ret == -1)
         return -1;
 
@@ -1053,7 +1078,91 @@ static int _cut_constant(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) 
     if (ret == -1)
         return -1;
 
+    tree_draw_graph(diff);
+
     return 1;
+}
+
+//==================================================================
+
+static int _mul_by_zero_simp_check(struct Node* node, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(node)
+
+    if (node->data_type    == OPERAND 
+    &&  node->data.operand == MUL 
+    &&  is_zero_node(node))
+
+        return 1;
+    else 
+        return 0;
+}
+
+static Node* _mul_by_one_simp_check(struct Node* node, LOG_PARAMS) {
+
+    diff_log_report();
+    if (!node)
+        return NULL;
+
+    struct Node* returning = NULL;
+
+    if  (node->data_type    == OPERAND 
+    &&   node->data.operand == MUL 
+    &&  (returning = is_one_node(node)))
+
+        return returning;
+    else 
+        return NULL;
+}
+
+static Node* _sum_with_zero_simp_check(struct Node* node, LOG_PARAMS) {
+
+    diff_log_report();
+    if (!node)
+        return NULL;
+
+    struct Node* returning = NULL;
+
+    if (node->data_type    == OPERAND
+    && (node->data.operand == ADD
+    ||  node->data.operand == SUB)
+    && (returning = is_zero_node(node)))
+
+        return returning;
+    else
+        return NULL;
+}
+
+static Node* _pow_one_simp_check(struct Node* node, LOG_PARAMS) {
+
+    diff_log_report();
+    if (!node)
+        return NULL;
+
+    struct Node* returning = NULL;
+
+    if (node->data_type    == OPERAND
+    &&  node->data.operand == POW
+    && (returning = is_one_node(node)))
+
+        return returning;
+    else
+        return NULL;
+}
+
+static int _pow_zero_simp_check(struct Node* node, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(node);
+
+    if (node->data_type    == OPERAND
+    &&  node->data.operand == POW
+    &&  is_zero_node(node))
+
+        return 1;
+    else
+        return 0;
 }
 
 //===================================================================
@@ -1066,68 +1175,82 @@ static int _cut_nodes(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) {
 
     struct Node* node = *node_ptr;
 
-    int left  = 0;
-    int right = 0;
+    int is_simplified = 0;
+    int ret = 0;
+    struct Node* cutted = NULL;
 
     if (node->left_son) {
 
-        left = cut_nodes(diff, &(node->left_son));
-        if (left == -1)
+        ret = cut_nodes(diff, &(node->left_son));
+        if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
     if (node->right_son) {
 
-        right = cut_nodes(diff, &(node->right_son));
-        if (right == -1)
+        ret = cut_nodes(diff, &(node->right_son));
+        if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
-    int zero_cut = 0;
-    int one_cut  = 0;
+    if (mul_by_zero_simp_check(node)) {
 
-    if (node->data_type == OPERAND
-    &&  node->data.operand == MUL
-    && (is_zero_node(node->left_son) 
-     || is_zero_node(node->right_son))) {
-
-         zero_cut = replace_with_const(node, 0);
-         if (zero_cut == -1)
+         ret = replace_with_const(node, 0);
+         if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
-    if (node->data_type == OPERAND
-    &&  node->data.operand == MUL
-    && (is_one_node(node->left_son) 
-     || is_one_node(node->right_son))) {
+    if ((cutted = mul_by_one_simp_check(node))) {
 
-         one_cut = cut_constant(diff, &node);
-         if (one_cut == -1)
+         ret = cut_constant(diff, &node, cutted);
+         if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
-    if (node->data_type == OPERAND
-    && (node->data.operand == ADD
-     || node->data.operand == SUB)
-    && (is_zero_node(node->left_son) 
-     || is_zero_node(node->right_son))) {
+    if ((cutted = sum_with_zero_simp_check(node))) {
 
-         one_cut = cut_constant(diff, &node);
-         if (one_cut == -1)
+         ret = cut_constant(diff, &node, cutted);
+         if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
     }
 
-    if (node->data_type == OPERAND
-    &&  node->data.operand == POW
-    && (is_one_node(node->left_son) 
-     || is_one_node(node->right_son))) {
+    if (pow_zero_simp_check(node)) {
 
-         one_cut = cut_constant(diff, &node);
-         if (one_cut == -1)
+         ret = replace_with_const(node, 1);
+         if (ret == -1)
             return -1;
+
+        else if (ret)
+            is_simplified++;
+
     }
 
-    return (left || right || zero_cut || one_cut);
+    if ((cutted = pow_one_simp_check(node))) {
+
+        ret = cut_constant(diff, &node, cutted);
+        if (ret == -1)
+            return -1;
+
+        else if (ret)
+            is_simplified++;
+    }
+
+    return is_simplified;
 }
 
 //===================================================================
@@ -1384,6 +1507,18 @@ static int _diff_operand_tg(struct Node* orig, struct Node* diff, LOG_PARAMS) {
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
+    NODE_INIT_OPERAND(diff, DIV);
+
+    ADD_CONSTANT(diff, LEFT,  1);
+    ADD_OPERAND (diff, RIGHT, POW);
+    ADD_LEFT_AND_RIGHT(diff->R);
+
+    NODE_INIT_OPERAND(diff->R->L, COS);
+    ADD_LEFT(diff->R->L);
+    NODE_COPY(orig->L, diff->R->L->L);
+
+    NODE_INIT_CONSTANT(diff->R->R, 2);
+
     return 0;
 }
 
@@ -1394,6 +1529,18 @@ static int _diff_operand_ctg(struct Node* orig, struct Node* diff, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
+
+    NODE_INIT_OPERAND(diff, DIV);
+
+    ADD_CONSTANT(diff, LEFT,  -1);
+    ADD_OPERAND (diff, RIGHT, POW);
+    ADD_LEFT_AND_RIGHT(diff->R);
+
+    NODE_INIT_OPERAND(diff->R->L, SIN);
+    ADD_LEFT(diff->R->L);
+    NODE_COPY(orig->L, diff->R->L->L);
+
+    NODE_INIT_CONSTANT(diff->R->R, 2);
 
     return 0;
 }

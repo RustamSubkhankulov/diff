@@ -7,15 +7,10 @@
 
 int main(int, char* argv[]) {
 
-    FILE* logs_file = open_log_file(argv[1]);
-    if (logs_file == NULL)
-        return -1;
-
-    for (int ct = 0; ct < Functions_number; ct++)
-        printf("\n\n %s %d \n\n", Functions[ct].name, Functions[ct]. code);
+    FILE* logs_file = NULL;
+    OPEN_LOG_FILE(logs_file, argv[1]);
 
     struct Tree tree = { 0 };
-
     int err_val = diff_tree_ctor(&tree); $
 
     char* buffer = NULL;

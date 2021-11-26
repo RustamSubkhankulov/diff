@@ -290,7 +290,7 @@ struct Function {
        const char* name;
 };
 
-static struct Function Functions[] {
+const static struct Function Functions[] {
 
        { 7563630   , 3141473398, "sin"  },
        { 6516595   , 2519927297, "cos"  },
@@ -462,8 +462,8 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 #define diff_operand_arctg_and_arcctg(orig, diff, oper) \
        _diff_operand_arctg_and_arcctg(orig, diff, oper, LOG_ARGS)
 
-#define node_simplify(diff) \
-       _node_simplify(diff, LOG_ARGS)
+#define tree_simplify(diff) \
+       _tree_simplify(diff, LOG_ARGS)
 
 #define constant_folding(node) \
        _constant_folding(node, LOG_ARGS)
@@ -486,6 +486,20 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 #define replace_with_const(node, constant) \
        _replace_with_const(node, constant, LOG_ARGS)
 
-#define cut_constant(diff, node) \
-       _cut_constant(diff, node, LOG_ARGS)  
+#define cut_constant(diff, node, cutted) \
+       _cut_constant(diff, node, cutted, LOG_ARGS)  
 
+#define mul_by_one_simp_check(node) \
+       _mul_by_one_simp_check(node, LOG_ARGS)
+
+#define mul_by_zero_simp_check(node) \
+       _mul_by_zero_simp_check(node, LOG_ARGS)
+       
+#define sum_with_zero_simp_check(node) \
+       _sum_with_zero_simp_check(node, LOG_ARGS)
+
+#define pow_zero_simp_check(node) \
+       _pow_zero_simp_check(node, LOG_ARGS)
+
+#define pow_one_simp_check(node) \
+       _pow_one_simp_check(node, LOG_ARGS)

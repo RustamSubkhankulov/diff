@@ -66,5 +66,14 @@ const char* get_error_descr(int error_code);
 
 //===================================================================
                                                       
-
+#define OPEN_LOG_FILE(file_ptr, filename) {                         \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        file_ptr = open_log_file(filename);                         \
+        if (logs_file == NULL)                                      \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}                   
 
