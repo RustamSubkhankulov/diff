@@ -38,25 +38,6 @@ static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff,
 static int _diff_operand_arctg_and_arcctg(struct Node* orig, struct Node* diff, 
                                                          int oper, LOG_PARAMS);
 
-static int _tree_simplify(struct Tree* diff, LOG_PARAMS);
-
-static int _constant_folding(struct Node* node, LOG_PARAMS);
-
-static int _cut_nodes(struct Tree* diff, struct Node** node, LOG_PARAMS);
-
-static int _calc_operand_value(struct Node* node, LOG_PARAMS);
-
-static int _calc_function_value(struct Node* node, LOG_PARAMS);
-
-static Node* _is_zero_node(struct Node* node, LOG_PARAMS);
-
-static Node* _is_one_node(struct Node* node, LOG_PARAMS);
-
-static int _replace_with_const(struct Node* node, double constant, LOG_PARAMS);
-
-static int _cut_constant(struct Tree* diff, struct Node** node, struct Node* cutted, 
-                                                                        LOG_PARAMS);
-
 //===================================================================
 
 int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS) {
@@ -225,10 +206,6 @@ static int _read_function(struct Node* node, struct Buffer_struct* buffer_struct
 
     int prev_pos = buffer_struct->pos;
 
-    // int opening = read_opening_bracket(buffer_struct);
-    // if (opening == -1)
-    //     return -1;
-
     char buffer[Function_name_buf_size] = { 0 };
     int offset = 0;
 
@@ -295,9 +272,7 @@ static int _read_constant(struct Node* node, struct Buffer_struct* buffer_struct
     }
 
     buffer_struct->pos += offset;
-    //
-    buffer_dump(buffer_struct);
-    //
+
     return node_init_constant(node, constant);
 }
 
@@ -327,13 +302,6 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
 
         case 1: {
 
-            // int ret = read_function(node, buffer_struct);
-            // if (ret == -1)
-            //     return -1;
-
-            // if (ret == 1)
-            //     break;
-
             if (symb_is_var_name(symb)) {
 
                 int ret = node_init_variable(node, symb);
@@ -341,9 +309,6 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
                     return -1;
 
                 buffer_struct->pos += offset;
-                //
-                buffer_dump(buffer_struct);
-                //
             }
 
             else if (symb_is_operand((int)symb)) {
@@ -353,9 +318,6 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
                     return -1;
 
                 buffer_struct->pos += offset;
-                //
-                buffer_dump(buffer_struct);
-                //
             }
 
             else {
@@ -377,10 +339,6 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
         }
     }
 
-    //
-    buffer_dump(buffer_struct);
-    //
-
     return 0;
 }
 
@@ -395,12 +353,6 @@ static int _read_node_with_children(struct Node* node, struct Buffer_struct* buf
 
     node->data_type = OPERAND;
 
-    // int ret = read_function(node, buffer_struct);
-    // if (ret == -1)
-    //     return -1;
-    // if (ret == 1)
-    //     return 0;
-
     int ret = node_add_sons(node);
     if (ret == -1)
         return -1;
@@ -409,25 +361,13 @@ static int _read_node_with_children(struct Node* node, struct Buffer_struct* buf
     if (ret == -1)
         return -1;
 
-    //
-    buffer_dump(buffer_struct);
-    //
-
     ret = read_node_data(node, buffer_struct);
     if (ret == -1)
         return -1;
 
-    //
-    buffer_dump(buffer_struct);
-    //
-
     ret = node_read_from_buffer(node->right_son, buffer_struct);
     if (ret == -1)
         return -1;
-
-    //
-    buffer_dump(buffer_struct);
-    //
 
     return 0;
 }
@@ -464,10 +404,6 @@ static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS
         buffer_dump(buffer_struct);
         return -1;
     } 
-
-    //
-    buffer_dump(buffer_struct);
-    //
 
     return 0;
 
@@ -506,10 +442,6 @@ static int _read_closing_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS
         return -1;
     } 
 
-    //
-    buffer_dump(buffer_struct);
-    //
-
     return 0;
 }
 
@@ -521,10 +453,6 @@ int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struc
     diff_log_report();
     NODE_PTR_CHECK(node);
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
-
-    //
-    buffer_dump(buffer_struct);
-    //
 
     int open_bracket = read_opening_bracket(buffer_struct);
     if (open_bracket == -1)
@@ -569,10 +497,6 @@ int _node_read_from_buffer(struct Node* node, struct Buffer_struct* buffer_struc
         buffer_dump(buffer_struct);
         return -1;
     }
-
-    //
-    buffer_dump(buffer_struct);
-    //
 
     return read_closing_bracket(buffer_struct);
 }
@@ -715,7 +639,7 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
 
     do 
     {
-        ret = tree_simplify(diff);
+        ret = tree_simplify(tree);
         if (ret == -1)
             return -1;
 
@@ -736,521 +660,6 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
     } while(ret == 1);
 
     return 0;
-}
-
-//===================================================================
-
-static int _tree_simplify(struct Tree* diff, LOG_PARAMS) {
-
-    diff_log_report();              //изменить на tree
-    TREE_PTR_CHECK(diff);
-
-    int constant_simp = constant_folding(diff->root);
-    if (constant_simp == -1)
-        return -1;
-
-    int cut_nodes = cut_nodes(diff, &(diff->root));
-    if (cut_nodes == -1)
-        return -1;
-
-    tree_draw_graph(diff);
-
-    return (constant_simp || cut_nodes );
-}
-
-//===================================================================
-
-static int _calc_operand_value(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(node);
-
-    double first_value  = node->left_son ->data.constant;
-    double second_value = node->right_son->data.constant;
-
-    double result = 0;
-
-    switch (node->data.operand) {
-
-        case ADD: {
-
-            result = first_value + second_value;
-            break;
-        }
-        
-        case SUB: {
-
-            result = first_value - second_value;
-            break;
-        }
-
-        case MUL: {
-
-            result = first_value * second_value;
-            break;
-        }
-
-        case DIV: {
-
-            if (double_is_equal(0, second_value)) {
-
-                error_report(DIV_BY_ZERO);
-                return -1;
-            }
-
-            result = first_value / second_value;
-            break;
-        }
-
-        case POW: {
-
-            result = pow(first_value, second_value);
-            break;
-        }
-
-        default: {
-
-            error_report(DIFF_INV_OPERAND);
-            return -1;
-        }
-    }
-
-    int ret = node_init_constant(node, result);
-    if (ret == -1)
-        return -1;
-
-    ret = node_visiter(node->left_son,  _node_destruct);
-    if (ret == -1)
-        return -1;
-
-    ret = node_visiter(node->right_son, _node_destruct);
-    if (ret == -1)
-        return -1;
-
-    node->left_son  = NULL;
-    node->right_son = NULL;
-
-    return 1;
-}
-
-//===================================================================
-
-static int _calc_function_value(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(node);
-
-    double arg = node->left_son->data.constant;
-    double result = 0;
-
-    switch (node->data.operand) {
-
-        case SIN: {
-
-            result = sin(arg);
-            break;
-        }
-
-        case COS: {
-
-            result = cos(arg);
-            break;
-        }
-
-        case TG: {
-
-            result = tan(arg);
-            break;
-        }
-
-        case CTG: {
-
-            result = 1 / tan(arg);
-            break;
-        }
-
-        case ACOS: {
-
-            result = acos(arg);
-            break;
-        }
-
-        case ASIN: {
-
-            result = asin(arg);
-            break;
-        }
-
-        case ATG: {
-
-            result = atan(arg); 
-            break;
-        }
-
-        case ACTG: {
-
-            result = 1 / atan(arg);
-            break;
-        }
-
-        default: {
-
-            error_report(DIFF_INV_OPERAND);
-            return -1;
-        }
-    }
-
-    int ret = node_init_constant(node, result);
-    if (ret == -1)
-        return -1;
-
-    ret = node_visiter(node->left_son, _node_destruct);
-    if (ret == -1)
-        return -1;
-
-    ret = node_visiter(node->right_son, _node_destruct);
-    if (ret == -1)
-        return -1;
-
-    node->left_son  = NULL;
-    node->right_son = NULL;
-
-    return 1;
-}
-
-//===================================================================
-
-static int _constant_folding(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(node);
-
-    int ret = 0;
-    int is_simplified = 0;
-
-    if (node->left_son) {
-
-        ret = constant_folding(node->left_son);
-        if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    if (node->right_son) {
-
-        ret = constant_folding(node->right_son);
-        if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    if (node->data_type == OPERAND 
-     && !is_function_operand(node)
-     && node->left_son ->data_type == CONSTANT 
-     && node->right_son->data_type == CONSTANT) {
-
-        ret = calc_operand_value(node);
-        if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    if (node->data_type == OPERAND
-    && is_function_operand(node)
-    && node->left_son != NULL
-    && node->left_son->data_type == CONSTANT) {
-
-        ret = calc_function_value(node);
-        if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    return is_simplified;
-}
-
-//===================================================================
-
-static Node* _is_zero_node(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    if (!node)
-        return NULL;
-
-    if (node->left_son->data_type == CONSTANT 
-     && double_is_equal(node->left_son->data.constant, 0))
-        return node->left_son;
-    
-    if (node->right_son->data_type == CONSTANT 
-     && double_is_equal(node->right_son->data.constant, 0))
-        return node->right_son;
-
-    return NULL;
-}
-
-//===================================================================
-
-static Node* _is_one_node(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    if (!node)
-        return NULL;
-
-    if (node->left_son->data_type == CONSTANT 
-     && double_is_equal(node->left_son->data.constant, 1))
-        return node->left_son;
-    
-    if (node->right_son->data_type == CONSTANT 
-     && double_is_equal(node->right_son->data.constant, 1))
-        return node->right_son;
-
-    return NULL;
-}
-
-//===================================================================
-
-static int _replace_with_const(struct Node* node, double constant, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(node);
-
-    int ret = node_visiter(node->left_son, _node_destruct);
-    if (ret == -1)
-        return -1;
-    
-    ret = node_visiter(node->right_son, _node_destruct);
-    if (ret == -1)
-        return -1;
-
-    ret = node_init_constant(node, constant);
-    if (ret == -1)
-        return -1;
-
-    node->left_son  = NULL;
-    node->right_son = NULL;
-
-    return 1;
-}
-
-//===================================================================
-
-static int _cut_constant(struct Tree* diff, struct Node** node_ptr, struct Node* cutted, 
-                                                                             LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(node_ptr);
-    TREE_PTR_CHECK(diff);
-
-    struct Node* node = *node_ptr;
-
-    struct Node* expression = NULL;
-
-    if (node->left_son != cutted)
-        expression = node->left_son;
-    else 
-        expression = node->right_son;
-
-    *node_ptr = expression;
-    (*node_ptr)->parent = node->parent;
-
-    if ((*node_ptr)->parent == No_parent)
-        diff->root = expression;
-
-    else if (node == node->parent->left_son)
-        node->parent->left_son  = expression;
-        
-    else if (node == node->parent->right_son)
-        node->parent->right_son = expression;
-
-    int ret = node_destruct(cutted);
-    if (ret == -1)
-        return -1;
-
-    ret = node_destruct(node);
-    if (ret == -1)
-        return -1;
-
-    tree_draw_graph(diff);
-
-    return 1;
-}
-
-//==================================================================
-
-static int _mul_by_zero_simp_check(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(node)
-
-    if (node->data_type    == OPERAND 
-    &&  node->data.operand == MUL 
-    &&  is_zero_node(node))
-
-        return 1;
-    else 
-        return 0;
-}
-
-static Node* _mul_by_one_simp_check(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    if (!node)
-        return NULL;
-
-    struct Node* returning = NULL;
-
-    if  (node->data_type    == OPERAND 
-    &&   node->data.operand == MUL 
-    &&  (returning = is_one_node(node)))
-
-        return returning;
-    else 
-        return NULL;
-}
-
-static Node* _sum_with_zero_simp_check(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    if (!node)
-        return NULL;
-
-    struct Node* returning = NULL;
-
-    if (node->data_type    == OPERAND
-    && (node->data.operand == ADD
-    ||  node->data.operand == SUB)
-    && (returning = is_zero_node(node)))
-
-        return returning;
-    else
-        return NULL;
-}
-
-static Node* _pow_one_simp_check(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    if (!node)
-        return NULL;
-
-    struct Node* returning = NULL;
-
-    if (node->data_type    == OPERAND
-    &&  node->data.operand == POW
-    && (returning = is_one_node(node)))
-
-        return returning;
-    else
-        return NULL;
-}
-
-static int _pow_zero_simp_check(struct Node* node, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(node);
-
-    if (node->data_type    == OPERAND
-    &&  node->data.operand == POW
-    &&  is_zero_node(node))
-
-        return 1;
-    else
-        return 0;
-}
-
-//===================================================================
-
-static int _cut_nodes(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) {
-
-    diff_log_report();
-    NODE_PTR_CHECK(node_ptr);
-    TREE_PTR_CHECK(diff);
-
-    struct Node* node = *node_ptr;
-
-    int is_simplified = 0;
-    int ret = 0;
-    struct Node* cutted = NULL;
-
-    if (node->left_son) {
-
-        ret = cut_nodes(diff, &(node->left_son));
-        if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    if (node->right_son) {
-
-        ret = cut_nodes(diff, &(node->right_son));
-        if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    if (mul_by_zero_simp_check(node)) {
-
-         ret = replace_with_const(node, 0);
-         if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    if ((cutted = mul_by_one_simp_check(node))) {
-
-         ret = cut_constant(diff, &node, cutted);
-         if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    if ((cutted = sum_with_zero_simp_check(node))) {
-
-         ret = cut_constant(diff, &node, cutted);
-         if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    if (pow_zero_simp_check(node)) {
-
-         ret = replace_with_const(node, 1);
-         if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-
-    }
-
-    if ((cutted = pow_one_simp_check(node))) {
-
-        ret = cut_constant(diff, &node, cutted);
-        if (ret == -1)
-            return -1;
-
-        else if (ret)
-            is_simplified++;
-    }
-
-    return is_simplified;
 }
 
 //===================================================================
@@ -1441,17 +850,17 @@ static int _diff_operand_pow(struct Node* orig, struct Node* diff,
 
     NODE_INIT_OPERAND (diff, MUL);
     ADD_LEFT_AND_RIGHT(diff);
-
     NODE_DIFF(orig->L, diff->L);
+    diff = diff->R;
 
-    NODE_INIT_OPERAND(diff->R, MUL);
-    ADD_CONSTANT(diff->R, LEFT,  power_value);
-    ADD_OPERAND (diff->R, RIGHT, POW);
+    NODE_INIT_OPERAND(diff, MUL);
+    ADD_CONSTANT(diff, LEFT,  power_value);
+    ADD_OPERAND (diff, RIGHT, POW);
 
-    ADD_LEFT_AND_RIGHT(diff->R->R);
+    ADD_LEFT_AND_RIGHT(diff->R);
 
-    NODE_COPY(orig->L, diff->R->R->L);
-    NODE_INIT_CONSTANT(diff->R->R->R, power_value - 1);
+    NODE_COPY(orig->L, diff->R->L);
+    NODE_INIT_CONSTANT(diff->R->R, power_value - 1);
 
     return 0;
 }
@@ -1463,6 +872,8 @@ static int _diff_operand_sin(struct Node* orig, struct Node* diff, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
+
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
 
     NODE_INIT_OPERAND(diff, MUL);
     ADD_LEFT_AND_RIGHT(diff);
@@ -1483,6 +894,8 @@ static int _diff_operand_cos(struct Node* orig, struct Node* diff, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
+
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
 
     NODE_INIT_OPERAND(diff, MUL);
     ADD_CONSTANT(diff, LEFT, -1);
@@ -1507,6 +920,8 @@ static int _diff_operand_tg(struct Node* orig, struct Node* diff, LOG_PARAMS) {
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+
     NODE_INIT_OPERAND(diff, DIV);
 
     ADD_CONSTANT(diff, LEFT,  1);
@@ -1529,6 +944,8 @@ static int _diff_operand_ctg(struct Node* orig, struct Node* diff, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
+
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
 
     NODE_INIT_OPERAND(diff, DIV);
 
@@ -1554,7 +971,28 @@ static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff,
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    oper++;
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+
+    NODE_INIT_OPERAND(diff, DIV);
+
+    int sign = 0;
+    if (oper == ASIN)
+        sign = 1;
+    else 
+        sign = -1;
+
+    ADD_CONSTANT(diff, LEFT, sign);
+    ADD_OPERAND (diff, RIGHT, POW);
+
+    ADD_OPERAND (diff->R, LEFT,  SUB);
+    ADD_CONSTANT(diff->R, RIGHT, 0.5);
+
+    ADD_CONSTANT(diff->R->L, LEFT,  1);
+    ADD_OPERAND (diff->R->L, RIGHT, POW);
+
+    ADD_LEFT_AND_RIGHT(diff->R->L->R);
+    NODE_INIT_CONSTANT(diff->R->L->R->R, 2);
+    NODE_COPY(orig->L, diff->R->L->R->L);
 
     return 0;
 }
@@ -1568,7 +1006,25 @@ static int _diff_operand_arctg_and_arcctg(struct Node* orig, struct Node* diff,
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    oper++;
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+
+    NODE_INIT_OPERAND(diff, DIV);
+
+    int sign = 0;
+    if (oper == ATG)
+        sign = 1;
+    else
+        sign = -1;
+
+    ADD_CONSTANT(diff, LEFT,  sign);
+    ADD_OPERAND (diff, RIGHT, ADD);
+
+    ADD_CONSTANT(diff->R, LEFT,  1);
+    ADD_OPERAND (diff->R, RIGHT, POW);
+
+    ADD_LEFT_AND_RIGHT(diff->R->R);
+    NODE_INIT_CONSTANT(diff->R->R->R, 2);
+    NODE_COPY(orig->L, diff->R->R->L);
 
     return 0;
 }

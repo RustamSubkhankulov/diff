@@ -3,6 +3,7 @@
 #include "diff_config.h"
 
 #include "../tree/tree.h"
+#include "../tree_simp/tree_simp.h"
 #include "../logs/errors_and_logs.h"
 
 //===================================================================
@@ -14,6 +15,20 @@
         int ret = node_init_constant(node, value);                  \
         if (ret == -1)                                              \
             return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define ADD_INSIDE_FUNCTION_DIFF(orig, diff) {                      \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        NODE_INIT_OPERAND (diff, MUL);                              \
+        ADD_LEFT_AND_RIGHT(diff);                                   \
+        NODE_DIFF(orig->L, diff->L);                                \
+        diff = diff->R;                                             \
                                                                     \
     } while(0);                                                     \
 }
@@ -461,45 +476,3 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 #define diff_operand_arctg_and_arcctg(orig, diff, oper) \
        _diff_operand_arctg_and_arcctg(orig, diff, oper, LOG_ARGS)
-
-#define tree_simplify(diff) \
-       _tree_simplify(diff, LOG_ARGS)
-
-#define constant_folding(node) \
-       _constant_folding(node, LOG_ARGS)
-
-#define cut_nodes(diff, node) \
-       _cut_nodes(diff, node, LOG_ARGS)
-
-#define calc_operand_value(node) \
-       _calc_operand_value(node, LOG_ARGS)
-
-#define calc_function_value(node) \
-       _calc_function_value(node, LOG_ARGS)
-
-#define is_zero_node(node) \
-       _is_zero_node(node, LOG_ARGS)
-
-#define is_one_node(node) \
-       _is_one_node(node, LOG_ARGS)
-
-#define replace_with_const(node, constant) \
-       _replace_with_const(node, constant, LOG_ARGS)
-
-#define cut_constant(diff, node, cutted) \
-       _cut_constant(diff, node, cutted, LOG_ARGS)  
-
-#define mul_by_one_simp_check(node) \
-       _mul_by_one_simp_check(node, LOG_ARGS)
-
-#define mul_by_zero_simp_check(node) \
-       _mul_by_zero_simp_check(node, LOG_ARGS)
-       
-#define sum_with_zero_simp_check(node) \
-       _sum_with_zero_simp_check(node, LOG_ARGS)
-
-#define pow_zero_simp_check(node) \
-       _pow_zero_simp_check(node, LOG_ARGS)
-
-#define pow_one_simp_check(node) \
-       _pow_one_simp_check(node, LOG_ARGS)
