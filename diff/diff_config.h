@@ -8,6 +8,8 @@ const int Console_input_buf_size = 200;
 
 const int Function_name_buf_size = 20;
 
+const int Variables_max_number = 10;
+
 //===================================================================
 
 #define DIFF_LOGS
@@ -17,6 +19,8 @@ const int Function_name_buf_size = 20;
 #define DIFF_DEBUG
 
 #define DIFF_DRAW_GRAPH
+
+#define DIFF_LATEX
 
 #define DIFF_SIMPLIFY
 

@@ -4,6 +4,8 @@
 #include <math.h>
 
 #include "diff.h"
+#include "diff_tex.h"
+#include "diff_variables.h"
 #include "../text_processing/text_processing.h"
 #include "../general/general.h"
 
@@ -37,6 +39,8 @@ static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff,
 
 static int _diff_operand_arctg_and_arcctg(struct Node* orig, struct Node* diff, 
                                                          int oper, LOG_PARAMS);
+
+static char _get_var_diff_by(LOG_PARAMS);
 
 //===================================================================
 
@@ -307,6 +311,9 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
                 int ret = node_init_variable(node, symb);
                 if (ret == -1)
                     return -1;
+
+                if (check_new_var(symb))
+                    add_new_var(symb);
 
                 buffer_struct->pos += offset;
             }
@@ -629,7 +636,37 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS) {
 
 //===================================================================
 
-int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
+static char _get_var_diff_by(LOG_PARAMS) {
+
+    diff_log_report();
+
+    printf("\n\n Choose a variable: \n\n");
+
+    print_vars(stdout);
+    putchar('\n');
+
+    char var = 0;
+    int scanned = scanf(" %c", &var);
+
+    while (scanned != 1 && !check_new_var(var)) {
+
+        if (scanned == -1) {
+
+            error_report(INPUT_ERR);
+            return -1;
+        }
+
+        printf("\n\n Please, try again.");
+        scanned = scanf(" %c", &var);
+    }
+
+    return var;
+}
+
+//===================================================================
+
+int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name, 
+                                                                  LOG_PARAMS) {
 
     diff_log_report();
     TREE_PTR_CHECK(tree);
@@ -645,11 +682,22 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
 
     } while(0);
 
-    ret = node_diff_execute(tree->root, diff->root);
+    char var = get_var_diff_by();
+
+    ret = node_diff_execute(tree->root, 
+                            diff->root, var);
     if (ret == -1)
         return -1;
 
     tree_draw_graph(diff);
+
+    #ifdef DIFF_LATEX
+
+        FILE* tex = tree_latex_execute(diff, tex_name);
+        if (!tex)
+            return -1;
+
+    #endif
 
     do 
     {
@@ -657,14 +705,28 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS) {
         if (ret == -1)
             return -1;
 
+        #ifdef DIFF_LATEX
+
+        if (ret)
+            tree_latex_add_conspect(tree, tex);
+
+        #endif
+
     } while(ret == 1);
+
+    #ifdef DIFF_LATEX
+
+        tree_latex_finish(tree);
+
+    #endif
 
     return 0;
 }
 
 //===================================================================
 
-int _node_diff_execute(struct Node* orig, struct Node* diff, LOG_PARAMS) {
+int _node_diff_execute(struct Node* orig, struct Node* diff, char var, 
+                                                           bbLOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
@@ -681,8 +743,11 @@ int _node_diff_execute(struct Node* orig, struct Node* diff, LOG_PARAMS) {
         }
 
         case VARIABLE: {
-
-            return node_init_constant(diff, 1);
+            
+            if (node->data.variable == var)
+                return node_init_constant(diff, 1);
+            else
+                return node_init_constant(diff, 0);
         }
 
         case OPERAND: {

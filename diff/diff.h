@@ -360,7 +360,8 @@ int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS);
 
 int _diff_tree_dtor(struct Tree* tree, LOG_PARAMS);
 
-int _diff_execute(struct Tree* tree, struct Tree* diff, LOG_PARAMS);
+int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name, 
+                                                                 LOG_PARAMS);
 
 int _node_diff_execute(struct Node* node, struct Node* diff, LOG_PARAMS);
 
@@ -396,11 +397,11 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 #define diff_read_from_console(tree) \
        _diff_read_from_console(tree, LOG_ARGS)
 
-#define diff_execute(tree, diff) \
-       _diff_execute(tree, diff, LOG_ARGS)
+#define diff_execute(tree, diff, tex_name) \
+       _diff_execute(tree, diff, tex_name, LOG_ARGS)
 
-#define node_diff_execute(orig, diff) \
-       _node_diff_execute(orig, diff, LOG_ARGS)
+#define node_diff_execute(orig, diff, var) \
+       _node_diff_execute(orig, diff, var, LOG_ARGS)
 
 #define diff_operand_node(orig, diff) \
        _diff_operand_node(orig, diff, LOG_ARGS)
@@ -476,3 +477,6 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 #define diff_operand_arctg_and_arcctg(orig, diff, oper) \
        _diff_operand_arctg_and_arcctg(orig, diff, oper, LOG_ARGS)
+
+#define get_var_diff_by() \
+       _get_var_diff_by(LOG_ARGS)

@@ -496,8 +496,8 @@ Search for the node that is not an object)
 DEF_ERR(814, INV_CASE_IN_AKINATOR_MENU,
 Invalid answer case in menu. How it even possible?)
 
-DEF_ERR(815, AKINATOR_INPUT_ERR,
-Akinator error during read from console)
+DEF_ERR(815, INPUT_ERR,
+Error during read from console)
 
 DEF_ERR(816, AKINATOR_MAX_NEW_OBJECTS,
 Number of new objects in akinator reached maximum. Save tree and reboot akinator)
