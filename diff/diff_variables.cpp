@@ -58,3 +58,10 @@ char _get_var_by_number(int number, LOG_PARAMS) {
     return Variables[Variables_counter - 1];
 }
 
+//===================================================================
+
+int _get_vars_number(LOG_PARAMS) {
+
+    return Variables_counter;
+}
+

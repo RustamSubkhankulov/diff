@@ -480,3 +480,6 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
 #define get_var_diff_by() \
        _get_var_diff_by(LOG_ARGS)
+
+#define complex_diff_add(diff_dest, diff) \
+       _complex_diff_add(diff_dest, diff, LOG_ARGS)

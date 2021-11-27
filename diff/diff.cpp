@@ -15,30 +15,30 @@ static int _read_closing_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS
 
 static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS);
 
-static int  _diff_operand_node(struct Node* orig, struct Node* diff, LOG_PARAMS);
+static int  _diff_operand_node(struct Node* orig, struct Node* diff, char var, LOG_PARAMS);
 
 static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff, 
-                                                   int oper, LOG_PARAMS);
+                                         char var, int oper, LOG_PARAMS);
 
-static int _diff_operand_mul(struct Node* orig, struct Node* diff, LOG_PARAMS);
+static int _diff_operand_mul(struct Node* orig, struct Node* diff, char var, LOG_PARAMS);
 
-static int _diff_operand_div(struct Node* orig, struct Node* diff, LOG_PARAMS);
+static int _diff_operand_div(struct Node* orig, struct Node* diff, char var, LOG_PARAMS);
 
-static int _diff_operand_pow(struct Node* orig, struct Node* diff, LOG_PARAMS);
+static int _diff_operand_pow(struct Node* orig, struct Node* diff, char var, LOG_PARAMS);
 
-static int _diff_operand_sin(struct Node* orig, struct Node* diff, LOG_PARAMS);
+static int _diff_operand_sin(struct Node* orig, struct Node* diff,  char var, LOG_PARAMS);
 
-static int _diff_operand_cos(struct Node* orig, struct Node* diff, LOG_PARAMS);
+static int _diff_operand_cos(struct Node* orig, struct Node* diff,  char var, LOG_PARAMS);
 
-static int _diff_operand_tg(struct Node* orig, struct Node* diff, LOG_PARAMS);
+static int _diff_operand_tg (struct Node* orig, struct Node* diff,  char var, LOG_PARAMS);
 
-static int _diff_operand_ctg(struct Node* orig, struct Node* diff, LOG_PARAMS);
+static int _diff_operand_ctg(struct Node* orig, struct Node* diff,  char var, LOG_PARAMS);
 
 static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff, 
-                                                          int oper, LOG_PARAMS);
+                                               int oper,  char var, LOG_PARAMS);
 
 static int _diff_operand_arctg_and_arcctg(struct Node* orig, struct Node* diff, 
-                                                         int oper, LOG_PARAMS);
+                                              int oper,  char var, LOG_PARAMS);
 
 static char _get_var_diff_by(LOG_PARAMS);
 
@@ -665,6 +665,38 @@ static char _get_var_diff_by(LOG_PARAMS) {
 
 //===================================================================
 
+static Node* _complex_diff_add(struct Node** diff_dest, sturct Tree* diff, LOG_PARAMS) {
+
+    if (!diff_dest) {
+
+        error_report(INV_NODE_PTR);
+        return NULL;
+    }
+
+    if (!diff) {
+
+        error_report(INV_TREE_PTR);
+        return NULL;
+    }
+
+    sturct Node* sum_node = node_allocate_memory();
+    if (!sum_node)
+        return NULL;
+
+    sum_node->parent = No_parent;
+    ADD_LEFT_AND_RIGHT(sum_node);
+    NODE_INIT_OPERAND (sum_node, ADD);
+
+    sum_node->left_son = diff->root;
+    diff->root->parent = sum_node;
+
+    diff->root = node_sum;
+    *diff_dest = sum_node->right_son;
+
+}
+
+//===================================================================
+
 int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name, 
                                                                   LOG_PARAMS) {
 
@@ -672,47 +704,56 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
     TREE_PTR_CHECK(tree);
     TREE_PTR_CHECK(diff);
 
-    int ret = 0;
-
-    do 
-    {
-        ret = tree_simplify(tree);
-        if (ret == -1)
-            return -1;
-
-    } while(0);
-
-    char var = get_var_diff_by();
-
-    ret = node_diff_execute(tree->root, 
-                            diff->root, var);
-    if (ret == -1)
-        return -1;
-
-    tree_draw_graph(diff);
-
     #ifdef DIFF_LATEX
 
-        FILE* tex = tree_latex_execute(diff, tex_name);
+        FILE* tex = tree_latex_start(tex_name);
         if (!tex)
             return -1;
 
     #endif
 
-    do 
-    {
-        ret = tree_simplify(diff);
+    int ret = tree_simplify(tree);
+    if (ret == -1)
+        return -1;
+
+    int vars_number = get_vars_number();
+    struct Node* diff_dest = diff->root;
+    struct Node* sum_node  = NULL;
+
+    while (int counter = 0; counter < vars_number, counter++) {
+
+        if (counter) 
+            sum_node = complex_diff_add(diff, &diff_dest);
+        
+        var = get_var_by_number(counter);
+
+        ret = node_diff_execute(tree->root, diff_node, var);
         if (ret == -1)
             return -1;
 
+        tree_draw_graph(diff);
+
         #ifdef DIFF_LATEX
 
-        if (ret)
-            tree_latex_add_conspect(tree, tex);
+            tree_latex_execute(tree, tex)
 
         #endif
 
-    } while(ret == 1);
+        do 
+        {
+            ret = tree_simplify(diff);
+            if (ret == -1)
+                return -1;
+
+            #ifdef DIFF_LATEX
+
+            if (ret)
+                tree_latex_add_conspect(tree, tex);
+
+            #endif
+
+        } while(ret == 1);
+    }
 
     #ifdef DIFF_LATEX
 
@@ -752,7 +793,7 @@ int _node_diff_execute(struct Node* orig, struct Node* diff, char var,
 
         case OPERAND: {
 
-            return diff_operand_node(orig, diff);
+            return diff_operand_node(orig, diff, var);
         }
         default: {
 
@@ -764,7 +805,7 @@ int _node_diff_execute(struct Node* orig, struct Node* diff, char var,
 
 //===================================================================
 
-static int _diff_operand_node(struct Node* orig, struct Node* diff, LOG_PARAMS) {
+static int _diff_operand_node(struct Node* orig, struct Node* diff, char var, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
@@ -776,28 +817,28 @@ static int _diff_operand_node(struct Node* orig, struct Node* diff, LOG_PARAMS) 
 
         case ADD: [[fallthrough]];
         case SUB: 
-            return diff_operand_add_or_sub(orig, diff, operand);
+            return diff_operand_add_or_sub(orig, diff, operand, var);
 
         case MUL: 
-            return diff_operand_mul(orig, diff);
+            return diff_operand_mul(orig, diff, var);
 
         case DIV:
-            return diff_operand_div(orig, diff);
+            return diff_operand_div(orig, diff, var);
 
         case POW:
-            return diff_operand_pow(orig, diff);
+            return diff_operand_pow(orig, diff, var);
 
         case SIN:
-            return diff_operand_sin(orig, diff);
+            return diff_operand_sin(orig, diff, var);
 
         case COS:
-            return diff_operand_cos(orig, diff);
+            return diff_operand_cos(orig, diff, var);
 
         case TG:
-            return diff_operand_tg(orig, diff);
+            return diff_operand_tg(orig, diff, var);
 
         case CTG:
-            return diff_operand_ctg(orig, diff);
+            return diff_operand_ctg(orig, diff, var);
 
         case ASIN: [[fallthrough]];
         case ACOS:

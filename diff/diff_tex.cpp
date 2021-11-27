@@ -2,13 +2,23 @@
 
 //===================================================================
 
-FILE*  _tree_latex_execute(struct Tree* tree, const char* tex_name, LOG_PARAMS) {
+int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
 
-    if (!tree) {
+    TREE_PTR_CHECK(tree);
+    if (tex == NULL) {
 
-        error_report(INV_TREE_PTR);
-        return NULL;
+        error_report(INV_FILE_PTR);
+        return -1;
     }
+
+
+
+    return 0;
+}
+
+//===================================================================
+
+FILE* _tree_latex_start(const char*  tex_name, LOG_PARAMS) {
 
     if (!tex_name) {
 
@@ -20,22 +30,7 @@ FILE*  _tree_latex_execute(struct Tree* tree, const char* tex_name, LOG_PARAMS) 
     if (!tex_name)
         return NULL;
 
-    tree_write_start(tex);
-
     return tex;
-}
-
-//===================================================================
-
-int _tree_write_start(FILE* tex, LOG_PARAMS) {
-
-    if (!tex) {
-
-        error_report(INV_FILE_PTR);
-        return -1;
-    }
-
-    return 0;
 }
 
 //===================================================================

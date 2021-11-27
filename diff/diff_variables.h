@@ -10,6 +10,8 @@ int _print_vars      (FILE* output, LOG_PARAMS);
 
 char _get_var_by_number(int number, LOG_PARAMS);
 
+int _get_vars_number               (LOG_PARAMS);
+ 
 //===================================================================
 
 #define check_new_var(var) \
@@ -23,5 +25,10 @@ char _get_var_by_number(int number, LOG_PARAMS);
 
 #define get_var_by_number(number) \
        _get_var_by_number(number, LOG_ARGS)
+
+#define get_vars_number() \
+       _get_vars_number(LOG_ARGS)
+
+
 
 
