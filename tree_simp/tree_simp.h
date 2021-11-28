@@ -2,11 +2,50 @@
 
 #include "../diff/diff.h"
 
-//=========================================================
+//===================================================================
 
 int _tree_simplify(struct Tree* diff, LOG_PARAMS);
 
-//=========================================================
+//===================================================================
+
+#define TREE_SIMPLIFY_WITH_TEX(tree, tex) {                         \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int is_simp = 0;                                            \
+        do                                                          \
+        {                                                           \
+            is_simp = tree_simplify(tree);                          \
+            if (is_simp == -1)                                      \
+                return -1;                                          \
+                                                                    \
+            if (is_simp)                                            \
+                tree_latex_add_conspect(tree, tex);                 \
+                                                                    \
+        } while (is_simp == 1);                                     \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//===================================================================
+
+#define TREE_SIMPLIFY(tree) {                                       \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int is_simp = 0;                                            \
+        do                                                          \
+        {                                                           \
+            is_simp = tree_simplify(tree);                          \
+            if (is_simp == -1)                                      \
+                return -1;                                          \
+                                                                    \
+        } while (is_simp == 1);                                     \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//===================================================================
 
 #define tree_simplify(diff) \
        _tree_simplify(diff, LOG_ARGS)

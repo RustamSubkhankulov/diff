@@ -137,9 +137,11 @@ int _tree_dump(struct Tree* tree, LOG_PARAMS) {
     tree_log_report();
     TREE_PTR_CHECK(tree);
 
-    fprintf(logs_file, "<div style = \"background-color: lightgrey; font-size: 18\"><pre>");
+    fprintf(logs_file, "<div style = \"background-color: "
+                       "lightgrey; font-size: 18 \"><pre>");
 
-    fprintf(logs_file, "\n\n\n<p style = \" text-align: center; \"><b> Tree structure </b></p>\n");
+    fprintf(logs_file, "\n\n\n<p style = \" text-align: center; \">"
+                                     "<b> Tree structure </b></p>\n");
 
     fprintf(logs_file, "\n Address: <%p>\n", tree);
 

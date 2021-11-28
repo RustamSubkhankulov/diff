@@ -2,6 +2,8 @@
 
 #define TEMP_DIR "/tmp/"
 
+#define LATEX_DIR "/home/rustam/Desktop/code/diff/latex/"
+
 //===================================================================
 
 const int Console_input_buf_size = 200;
@@ -9,6 +11,8 @@ const int Console_input_buf_size = 200;
 const int Function_name_buf_size = 20;
 
 const int Variables_max_number = 10;
+
+const int Directory_name_buffer_size = 100;
 
 //===================================================================
 
@@ -20,7 +24,7 @@ const int Variables_max_number = 10;
 
 #define DIFF_DRAW_GRAPH
 
-#define DIFF_LATEX
+//#define DIFF_LATEX
 
 #define DIFF_SIMPLIFY
 

@@ -17,8 +17,8 @@ static int _read_opening_bracket(struct Buffer_struct* buffer_struct, LOG_PARAMS
 
 static int  _diff_operand_node(struct Node* orig, struct Node* diff, char var, LOG_PARAMS);
 
-static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff, 
-                                         char var, int oper, LOG_PARAMS);
+static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff, int oper, char var,
+                                                                                  LOG_PARAMS);
 
 static int _diff_operand_mul(struct Node* orig, struct Node* diff, char var, LOG_PARAMS);
 
@@ -33,6 +33,11 @@ static int _diff_operand_cos(struct Node* orig, struct Node* diff,  char var, LO
 static int _diff_operand_tg (struct Node* orig, struct Node* diff,  char var, LOG_PARAMS);
 
 static int _diff_operand_ctg(struct Node* orig, struct Node* diff,  char var, LOG_PARAMS);
+
+static int _node_is_constant(struct Node* node, char var, LOG_PARAMS);
+
+static int _complex_diff_add_sum(struct Node** diff_dest, struct Node** sum_node,  
+                                                   struct Tree* diff, LOG_PARAMS);
 
 static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff, 
                                                int oper,  char var, LOG_PARAMS);
@@ -665,33 +670,106 @@ static char _get_var_diff_by(LOG_PARAMS) {
 
 //===================================================================
 
-static Node* _complex_diff_add(struct Node** diff_dest, sturct Tree* diff, LOG_PARAMS) {
+static int _complex_diff_add_sum(struct Node** diff_dest, struct Node** sum_node,  
+                                                   struct Tree* diff, LOG_PARAMS) {
 
-    if (!diff_dest) {
+    NODE_PTR_CHECK(diff_dest);
+    NODE_PTR_CHECK(sum_node);
+    TREE_PTR_CHECK(diff);
 
-        error_report(INV_NODE_PTR);
-        return NULL;
+    struct Node* prev_sum = *sum_node;
+
+    *sum_node = (Node*)node_allocate_memory();
+    if (!(*sum_node))
+        return -1;
+
+    (*sum_node)->parent = No_parent;
+    diff->root = *sum_node;
+
+    NODE_INIT_OPERAND (*sum_node, ADD);
+
+    (*sum_node)->left_son  = prev_sum;
+    prev_sum->parent       = *sum_node;
+
+    ADD_RIGHT(*sum_node);
+    *diff_dest = (*sum_node)->right_son;
+    (*sum_node)->right_son->parent = (*sum_node);
+
+    return 0;
+}
+
+//===================================================================
+
+int _diff_execute_single(struct Tree* tree, struct Tree* diff, FILE* tex, 
+                                                    char var, LOG_PARAMS) {
+    diff_log_report();
+
+    NODE_DIFF(tree->root, diff->root, var);
+    tree_draw_graph(diff);
+
+    #ifdef DIFF_LATEX
+
+        tree_latex_execute(diff, tex);
+        TREE_SIMPLIFY_WITH_TEX(diff, tex);
+
+    #else 
+
+        TREE_SIMPLIFY(diff);
+
+    #endif
+
+    return 0;
+}
+
+//===================================================================
+
+int _diff_execute_all(struct Tree* tree, struct Tree* diff, FILE* tex, 
+                                                           LOG_PARAMS) {
+    diff_log_report();
+
+    int vars_number = get_vars_number();
+
+    struct Node* diff_dest = diff->root;
+    struct Node* sum_node  = NULL;
+
+    for (int counter = 0; counter < vars_number; counter++) {
+
+        char var = get_var_by_number(counter);
+
+        NODE_DIFF(tree->root, diff_dest, var);
+
+        if (counter)
+            diff_dest->parent = sum_node;
+
+        tree_draw_graph(diff);
+
+        #ifdef DIFF_LATEX
+
+            tree_latex_execute(diff, tex);
+            TREE_SIMPLIFY_WITH_TEX(diff, tex);
+
+        #else 
+
+            TREE_SIMPLIFY(diff);
+
+        #endif
+
+        if (!counter)    
+            sum_node = diff->root;
+
+        if (vars_number > 1 && counter < vars_number - 1)
+            COMPLEX_DIFF_ADD_SUM(&diff_dest, &sum_node, diff)
     }
 
-    if (!diff) {
+    return 0;
+}
 
-        error_report(INV_TREE_PTR);
-        return NULL;
-    }
+//===================================================================
 
-    sturct Node* sum_node = node_allocate_memory();
-    if (!sum_node)
-        return NULL;
+char _diff_menu(LOG_PARAMS) {
 
-    sum_node->parent = No_parent;
-    ADD_LEFT_AND_RIGHT(sum_node);
-    NODE_INIT_OPERAND (sum_node, ADD);
+    diff_log_report();
 
-    sum_node->left_son = diff->root;
-    diff->root->parent = sum_node;
-
-    diff->root = node_sum;
-    *diff_dest = sum_node->right_son;
 
 }
 
@@ -704,61 +782,35 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
     TREE_PTR_CHECK(tree);
     TREE_PTR_CHECK(diff);
 
+    print_vars(stdout);
+    fflush(stdout);
+
     #ifdef DIFF_LATEX
 
-        FILE* tex = tree_latex_start(tex_name);
+        FILE* tex = tree_latex_start(tree, tex_name);
         if (!tex)
             return -1;
 
+        tree_latex_execute(tree, tex);
+        TREE_SIMPLIFY_WITH_TEX(tree, tex);
+
+    #else
+
+        TREE_SIMPLIFY(tree);
+
     #endif
 
-    int ret = tree_simplify(tree);
-    if (ret == -1)
+    char answer = diff_menu();
+    if (answer == -1)
         return -1;
 
-    int vars_number = get_vars_number();
-    struct Node* diff_dest = diff->root;
-    struct Node* sum_node  = NULL;
-
-    while (int counter = 0; counter < vars_number, counter++) {
-
-        if (counter) 
-            sum_node = complex_diff_add(diff, &diff_dest);
-        
-        var = get_var_by_number(counter);
-
-        ret = node_diff_execute(tree->root, diff_node, var);
-        if (ret == -1)
-            return -1;
-
-        tree_draw_graph(diff);
-
-        #ifdef DIFF_LATEX
-
-            tree_latex_execute(tree, tex)
-
-        #endif
-
-        do 
-        {
-            ret = tree_simplify(diff);
-            if (ret == -1)
-                return -1;
-
-            #ifdef DIFF_LATEX
-
-            if (ret)
-                tree_latex_add_conspect(tree, tex);
-
-            #endif
-
-        } while(ret == 1);
-    }
+    if (!answer) 
+        DIFF_EXECUTE_ALL(tree, diff, tex);
+    else
+        DIFF_EXECUTE_SINGLE(tree, diff, tex, var);
 
     #ifdef DIFF_LATEX
-
         tree_latex_finish(tree);
-
     #endif
 
     return 0;
@@ -766,8 +818,43 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
 
 //===================================================================
 
+static int _node_is_constant(struct Node* node, char var, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(node);
+
+    if (!node->left_son && !node->right_son) {
+
+        if (node->data_type == CONSTANT || 
+           (node->data_type == VARIABLE && node->data.variable != var))
+
+           return 1;
+    }
+
+    int left  = 1;
+    int right = 1;
+
+    if (node->left_son) {
+
+        left = node_is_constant(node->left_son, var);
+        if (left == -1)
+            return -1;
+    }
+
+    if (node->right_son) {
+
+        right = node_is_constant(node->right_son, var);
+        if (right == -1)
+            return -1;
+    }
+
+    return (right && left);
+}
+
+//===================================================================
+
 int _node_diff_execute(struct Node* orig, struct Node* diff, char var, 
-                                                           bbLOG_PARAMS) {
+                                                           LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
@@ -785,7 +872,7 @@ int _node_diff_execute(struct Node* orig, struct Node* diff, char var,
 
         case VARIABLE: {
             
-            if (node->data.variable == var)
+            if (orig->data.variable == var)
                 return node_init_constant(diff, 1);
             else
                 return node_init_constant(diff, 0);
@@ -795,7 +882,11 @@ int _node_diff_execute(struct Node* orig, struct Node* diff, char var,
 
             return diff_operand_node(orig, diff, var);
         }
+
         default: {
+
+            if (node_is_constant(orig, var))
+                return node_init_constant(diff, 0);
 
             error_report(DIFF_INV_DATA_TYPE);
             return -1;
@@ -842,11 +933,11 @@ static int _diff_operand_node(struct Node* orig, struct Node* diff, char var, LO
 
         case ASIN: [[fallthrough]];
         case ACOS:
-            return diff_operand_arcsin_and_arccos(orig, diff, operand);
+            return diff_operand_arcsin_and_arccos(orig, diff, operand, var);
 
         case ATG: [[fallthrough]];
         case ACTG:
-            return diff_operand_arctg_and_arcctg(orig, diff, operand);
+            return diff_operand_arctg_and_arcctg(orig, diff, operand, var);
 
         default: {
 
@@ -865,7 +956,7 @@ static int _diff_operand_node(struct Node* orig, struct Node* diff, char var, LO
 //===================================================================
 
 static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff, 
-                                                             int oper, LOG_PARAMS) {
+                                          int oper, char var, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
@@ -875,8 +966,8 @@ static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff,
 
     ADD_LEFT_AND_RIGHT(diff);
 
-    NODE_DIFF(orig->L, diff->L);
-    NODE_DIFF(orig->R, diff->R);
+    NODE_DIFF(orig->L, diff->L, var);
+    NODE_DIFF(orig->R, diff->R, var);
 
     return 0;
 }
@@ -884,7 +975,7 @@ static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff,
 //===================================================================
 
 static int _diff_operand_mul(struct Node* orig, struct Node* diff, 
-                                                                LOG_PARAMS) {
+                                             char var, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
@@ -897,11 +988,11 @@ static int _diff_operand_mul(struct Node* orig, struct Node* diff,
     ADD_LEFT_AND_RIGHT(diff->L);
     ADD_LEFT_AND_RIGHT(diff->R);
 
-    NODE_DIFF(orig->L, diff->L->L);
+    NODE_DIFF(orig->L, diff->L->L, var);
     NODE_COPY(orig->R, diff->L->R);
 
+    NODE_DIFF(orig->R, diff->R->R, var);
     NODE_COPY(orig->L, diff->R->L);
-    NODE_DIFF(orig->R, diff->R->R);
 
     return 0;
 }
@@ -909,7 +1000,7 @@ static int _diff_operand_mul(struct Node* orig, struct Node* diff,
 //===================================================================
 
 static int _diff_operand_div(struct Node* orig, struct Node* diff, 
-                                                                LOG_PARAMS) {
+                                             char var, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
@@ -930,34 +1021,26 @@ static int _diff_operand_div(struct Node* orig, struct Node* diff,
     ADD_LEFT_AND_RIGHT(diff->L->L);
     ADD_LEFT_AND_RIGHT(diff->L->R);
 
-    NODE_DIFF(orig->L, diff->L->L->L);
+    NODE_DIFF(orig->L, diff->L->L->L, var);
     NODE_COPY(orig->R, diff->L->L->R);
 
+    NODE_DIFF(orig->R, diff->L->R->R, var);
     NODE_COPY(orig->L, diff->L->R->L);
-    NODE_DIFF(orig->R, diff->L->R->R);
 
     return 0;
 }
 
 //===================================================================
 
-static int _diff_operand_pow(struct Node* orig, struct Node* diff, 
-                                                                LOG_PARAMS) {
+static int _diff_operand_pow(struct Node* orig, struct Node* diff, char var,
+                                                                 LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    if (orig->L->data_type == CONSTANT 
-     && orig->R->data_type == CONSTANT)
-
-        return node_init_constant(diff, 0);
-
     double power_value = orig->R->data.constant;
 
-    NODE_INIT_OPERAND (diff, MUL);
-    ADD_LEFT_AND_RIGHT(diff);
-    NODE_DIFF(orig->L, diff->L);
-    diff = diff->R;
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff, var);
 
     NODE_INIT_OPERAND(diff, MUL);
     ADD_CONSTANT(diff, LEFT,  power_value);
@@ -973,18 +1056,19 @@ static int _diff_operand_pow(struct Node* orig, struct Node* diff,
 
 //===================================================================
 
-static int _diff_operand_sin(struct Node* orig, struct Node* diff, LOG_PARAMS) {
+static int _diff_operand_sin(struct Node* orig, struct Node* diff, char var, 
+                                                                 LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff, var);
 
     NODE_INIT_OPERAND(diff, MUL);
     ADD_LEFT_AND_RIGHT(diff);
 
-    NODE_DIFF(orig->L, diff->R);
+    NODE_DIFF(orig->L, diff->R, var);
 
     NODE_INIT_OPERAND(diff->L, COS);
     ADD_LEFT (diff->L);
@@ -995,13 +1079,14 @@ static int _diff_operand_sin(struct Node* orig, struct Node* diff, LOG_PARAMS) {
 
 //===================================================================
 
-static int _diff_operand_cos(struct Node* orig, struct Node* diff, LOG_PARAMS) {
+static int _diff_operand_cos(struct Node* orig, struct Node* diff, char var, 
+                                                                 LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff, var);
 
     NODE_INIT_OPERAND(diff, MUL);
     ADD_CONSTANT(diff, LEFT, -1);
@@ -1009,7 +1094,7 @@ static int _diff_operand_cos(struct Node* orig, struct Node* diff, LOG_PARAMS) {
 
     ADD_LEFT_AND_RIGHT(diff->R);
 
-    NODE_DIFF(orig->L, diff->R->L);
+    NODE_DIFF(orig->L, diff->R->L, var);
 
     NODE_INIT_OPERAND( diff->R->R, SIN);
     ADD_LEFT( diff->R->R);
@@ -1020,13 +1105,14 @@ static int _diff_operand_cos(struct Node* orig, struct Node* diff, LOG_PARAMS) {
 
 //===================================================================
 
-static int _diff_operand_tg(struct Node* orig, struct Node* diff, LOG_PARAMS) {
+static int _diff_operand_tg(struct Node* orig, struct Node* diff, char var, 
+                                                                LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff, var);
 
     NODE_INIT_OPERAND(diff, DIV);
 
@@ -1045,13 +1131,14 @@ static int _diff_operand_tg(struct Node* orig, struct Node* diff, LOG_PARAMS) {
 
 //===================================================================
 
-static int _diff_operand_ctg(struct Node* orig, struct Node* diff, LOG_PARAMS) {
+static int _diff_operand_ctg(struct Node* orig, struct Node* diff, char var, 
+                                                                 LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff, var);
 
     NODE_INIT_OPERAND(diff, DIV);
 
@@ -1071,13 +1158,13 @@ static int _diff_operand_ctg(struct Node* orig, struct Node* diff, LOG_PARAMS) {
 //===================================================================
 
 static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff, 
-                                                                    int oper, LOG_PARAMS) {
+                                                 int oper, char var, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff, var);
 
     NODE_INIT_OPERAND(diff, DIV);
 
@@ -1106,13 +1193,13 @@ static int _diff_operand_arcsin_and_arccos(struct Node* orig, struct Node* diff,
 //===================================================================
 
 static int _diff_operand_arctg_and_arcctg(struct Node* orig, struct Node* diff, 
-                                                                   int oper, LOG_PARAMS) {
+                                                int oper, char var, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
     NODE_PTR_CHECK(diff);
 
-    ADD_INSIDE_FUNCTION_DIFF(orig, diff);
+    ADD_INSIDE_FUNCTION_DIFF(orig, diff, var);
 
     NODE_INIT_OPERAND(diff, DIV);
 

@@ -28,5 +28,8 @@ clean:
 deletepng:
 	rm /tmp/diff_images/*.png
 
-makeimagesdir: 
+imagesdir: 
 	mkdir /tmp/diff_images
+
+logfile:
+	>> /tmp/diff_logs.html

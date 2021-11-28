@@ -264,11 +264,13 @@ static Node* _is_zero_node(struct Node* node, LOG_PARAMS) {
     if (!node)
         return NULL;
 
-    if (node->left_son->data_type == CONSTANT 
+    if (node->left_son 
+     && node->left_son->data_type == CONSTANT 
      && double_is_equal(node->left_son->data.constant, 0))
         return node->left_son;
     
-    if (node->right_son->data_type == CONSTANT 
+    if (node->right_son
+     && node->right_son->data_type == CONSTANT 
      && double_is_equal(node->right_son->data.constant, 0))
         return node->right_son;
 
@@ -283,11 +285,13 @@ static Node* _is_one_node(struct Node* node, LOG_PARAMS) {
     if (!node)
         return NULL;
 
-    if (node->left_son->data_type == CONSTANT 
+    if (node->left_son
+     && node->left_son->data_type == CONSTANT 
      && double_is_equal(node->left_son->data.constant, 1))
         return node->left_son;
     
-    if (node->right_son->data_type == CONSTANT 
+    if (node->right_son
+     && node->right_son->data_type == CONSTANT 
      && double_is_equal(node->right_son->data.constant, 1))
         return node->right_son;
 
@@ -340,7 +344,7 @@ static int _cut_constant(struct Tree* diff, struct Node** node_ptr, struct Node*
     *node_ptr = expression;
     (*node_ptr)->parent = node->parent;
 
-    if ((*node_ptr)->parent == No_parent)
+    if (node->parent == No_parent)
         diff->root = expression;
 
     else if (node == node->parent->left_son)
@@ -349,7 +353,7 @@ static int _cut_constant(struct Tree* diff, struct Node** node_ptr, struct Node*
     else if (node == node->parent->right_son)
         node->parent->right_son = expression;
 
-    int ret = node_destruct(cutted);
+    int ret = node_visiter(cutted, _node_destruct);
     if (ret == -1)
         return -1;
 

@@ -27,7 +27,7 @@ int main(int, char* argv[]) {
     struct Tree diff = { 0 };
     err_val = diff_tree_ctor(&diff); $
 
-    err_val = diff_execute(&tree, &diff, argv[4]); $
+    err_val = diff_execute(&tree, &diff, "diff.tex"); $
 
     #ifdef DIFF_OUT_TO_FILE
         err_val = diff_out_to_file(&diff, argv[3]);

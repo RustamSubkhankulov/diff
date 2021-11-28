@@ -1,4 +1,5 @@
 #include "diff_tex.h"
+#include "../general/general.h"
 
 //===================================================================
 
@@ -18,7 +19,34 @@ int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
 
 //===================================================================
 
-FILE* _tree_latex_start(const char*  tex_name, LOG_PARAMS) {
+int _tree_write_title(FILE* tex, LOG_PARAMS) {
+
+    diff_log_report();
+
+    if (!tex) {
+
+        error_report(INV_FILE_PTR);
+        return -1;
+    }
+
+    return 0;
+}
+
+//===================================================================
+
+FILE* _open_latex_file(const char* tex_name, LOG_PARAMS) {
+
+    diff_log_report();
+
+    char dir_name_buffer[Directory_name_buffer_size] = { 0 };
+    sprintf(dir_name_buffer, "%s%s", LATEX_DIR, tex_name);
+
+    return open_file(dir_name_buffer, "wb");
+}
+
+//===================================================================
+
+FILE* _tree_latex_start(struct Tree* tree, const char* tex_name, LOG_PARAMS) {
 
     if (!tex_name) {
 
@@ -26,8 +54,8 @@ FILE* _tree_latex_start(const char*  tex_name, LOG_PARAMS) {
         return NULL;
     }
 
-    FILE* tex = open_log_file(tex_name);
-    if (!tex_name)
+    FILE* tex = open_latex_file(tex_name);
+    if (!tex)
         return NULL;
 
     return tex;

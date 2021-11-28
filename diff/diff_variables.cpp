@@ -55,7 +55,7 @@ int _print_vars(FILE* output, LOG_PARAMS) {
 
 char _get_var_by_number(int number, LOG_PARAMS) {
 
-    return Variables[Variables_counter - 1];
+    return Variables[number];
 }
 
 //===================================================================
