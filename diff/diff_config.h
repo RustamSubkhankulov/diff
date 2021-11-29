@@ -14,6 +14,8 @@ const int Variables_max_number = 10;
 
 const int Directory_name_buffer_size = 100;
 
+const int System_cmnd_buf_size = 200;
+
 //===================================================================
 
 #define DIFF_LOGS

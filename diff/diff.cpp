@@ -769,7 +769,7 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
 
     //#ifdef DIFF_LATEX
 
-        FILE* tex = tree_latex_start(tree, tex_name);
+        FILE* tex = tree_latex_start(tree);
         if (!tex)
             return -1;
 
@@ -788,7 +788,7 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
 
         NODE_INIT_CONSTANT(diff->root, 0);
         tree_latex_add_conspect(diff, tex);
-        tree_latex_finish(tree, tex);
+        tree_latex_finish(tree, tex, tex_name);
 
         return 0;
     }
@@ -808,7 +808,7 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
         DIFF_EXECUTE_SINGLE(tree, diff, tex, answer);
 
     //#ifdef DIFF_LATEX
-        tree_latex_finish(tree, tex);
+        tree_latex_finish(tree, tex, tex_name);
     //#endif
 
     return 0;
@@ -1237,5 +1237,58 @@ int _diff_out_to_console(struct Tree* diff, LOG_PARAMS) {
     TREE_PTR_CHECK(diff);
 
     return node_save_to_file(diff->root, stdout);
+}
+
+//===================================================================
+
+int diff_read_cmnd_line(int argc, const char* argv[], const char** logs  , 
+                                                      const char** input , 
+                                                      const char** output, 
+                                                      const char** latex) {
+
+    for (int counter = 1; counter < argc; counter++) {
+
+        #ifdef DIFF_LOGS
+
+            if (!strcmp("-L", argv[counter])) {
+
+                *logs = argv[counter + 1];
+                counter += 2;
+            }
+
+        #endif
+
+        #ifdef DIFF_READ_FROM_FILE
+
+            if (!strcmp("-I", argv[counter])) {
+
+                *input = argv[counter + 1];
+                counter += 2;
+            }
+            
+        #endif
+
+        #ifdef DIFF_OUT_TO_FILE
+
+            if (!strcmp("-O", argv[counter])) {
+
+                *output = argv[counter + 1];
+                counter += 2;
+            }
+            
+        #endif
+
+        #ifdef DIFF_LATEX
+
+            if (!strcmp("-T", argv[counter])) {
+
+                *latex = argv[counter + 1];
+                counter += 2;
+            }
+            
+        #endif
+    } 
+
+    return 0;                                                      
 }
 

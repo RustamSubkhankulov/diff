@@ -8,8 +8,6 @@
 
  const int Dir_name_size = 100;
 
- const int System_cmnd_buf_size = 200;
-
 //===================================================================
 
 //TREE OPTIONS

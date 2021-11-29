@@ -8,6 +8,15 @@
 
 //===================================================================
 
+#define ADD_POINTERS(logs, input, output, latex)                    \
+                                                                    \
+    const char* logs   = NULL;                                      \
+    const char* input  = NULL;                                      \
+    const char* output = NULL;                                      \
+    const char* latex  = NULL;                                      \
+
+//===================================================================
+
 #define NODE_READ_FROM_BUFFER(node, buffer_struct) {                \
                                                                     \
     do                                                              \
@@ -513,6 +522,11 @@ int _diff_execute_single(struct Tree* tree, struct Tree* diff, FILE* tex,
 
 int _diff_execute_all(struct Tree* tree, struct Tree* diff, FILE* tex, 
                                                            LOG_PARAMS);
+
+int diff_read_cmnd_line(int aargc, const char* argv[], const char** logs  , 
+                                                       const char** input , 
+                                                       const char** output, 
+                                                       const char** latex);
 
 //===================================================================
 
