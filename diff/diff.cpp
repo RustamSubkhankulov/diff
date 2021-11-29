@@ -49,16 +49,22 @@ static char _get_var_diff_by(LOG_PARAMS);
 
 //===================================================================
 
+#define L left_son
+
+#define R right_son
+
+//===================================================================
+
 int _diff_tree_ctor(struct Tree* tree, LOG_PARAMS) {
 
     diff_log_report();
     TREE_PTR_CHECK(tree);
 
-    int ret = tree_ctor(tree);
-    if (ret == -1)
+    int ctor_ret = tree_ctor(tree);
+    if (ctor_ret == -1)
         return -1;
 
-    ret = node_init_constant(tree->root, 0);
+    NODE_INIT_CONSTANT(tree->root, 0);
     tree->root->parent = No_parent;
 
     DIFF_TREE_VERIFICATION(tree);
@@ -119,8 +125,8 @@ int _buffer_dump(struct Buffer_struct* buffer_struct, LOG_PARAMS) {
     BUFFER_STRUCT_PTR_CHECK(buffer_struct);
 
     const char* buffer = buffer_struct->buffer;
-    int size = buffer_struct->size;
-    int pos = buffer_struct->pos;
+    int size           = buffer_struct->size;
+    int pos            = buffer_struct->pos;
 
     if (buffer == NULL) {
 
@@ -232,23 +238,14 @@ static int _read_function(struct Node* node, struct Buffer_struct* buffer_struct
 
         if (hash == Functions[counter].hash) {
 
-            int ret = node_init_operand(node, Functions[counter].code);
-            if (ret == -1)
-                return -1;
+            NODE_INIT_OPERAND(node, Functions[counter].code);
 
             buffer_struct->pos += offset;
 
-            ret = node_add_left_son(node);
-            if (ret == -1)
-                return -1;
+            ADD_LEFT(node);
 
-            ret = node_read_from_buffer(node->left_son, buffer_struct);
-            if (ret == -1)
-                return -1;
-
-            ret =  read_closing_bracket(buffer_struct);
-            if (ret == -1)
-                return -1;
+            NODE_READ_FROM_BUFFER(node->L, buffer_struct);
+            READ_CLOSING_BRACKET(buffer_struct);
             
             return 1;
         }
@@ -313,9 +310,7 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
 
             if (symb_is_var_name(symb)) {
 
-                int ret = node_init_variable(node, symb);
-                if (ret == -1)
-                    return -1;
+                NODE_INIT_VARIABLE(node, symb);
 
                 if (check_new_var(symb))
                     add_new_var(symb);
@@ -325,10 +320,7 @@ static int _read_node_data(struct Node* node, struct Buffer_struct* buffer_struc
 
             else if (symb_is_operand((int)symb)) {
 
-                int ret = node_init_operand(node, (int)symb);
-                if (ret == -1)
-                    return -1;
-
+                NODE_INIT_OPERAND(node, (int)symb);
                 buffer_struct->pos += offset;
             }
 
@@ -365,11 +357,9 @@ static int _read_node_with_children(struct Node* node, struct Buffer_struct* buf
 
     node->data_type = OPERAND;
 
-    int ret = node_add_sons(node);
-    if (ret == -1)
-        return -1;
+    ADD_LEFT_AND_RIGHT(node);
 
-    ret = node_read_from_buffer(node->left_son, buffer_struct);
+    int ret = node_read_from_buffer(node->left_son, buffer_struct);
     if (ret == -1)
         return -1;
 
@@ -647,13 +637,15 @@ static char _get_var_diff_by(LOG_PARAMS) {
 
     printf("\n\n Choose a variable: \n\n");
 
+    printf("\n 0). all ");
     print_vars(stdout);
     putchar('\n');
 
-    char var = 0;
-    int scanned = scanf(" %c", &var);
+    int var_number = 0;
+    int scanned    = 0;
 
-    while (scanned != 1 && !check_new_var(var)) {
+    while ((scanned = scanf(" %d", &var_number)) != 1
+       && (var_number < 0 || var_number > get_vars_number())) {
 
         if (scanned == -1) {
 
@@ -661,11 +653,13 @@ static char _get_var_diff_by(LOG_PARAMS) {
             return -1;
         }
 
-        printf("\n\n Please, try again.");
-        scanned = scanf(" %c", &var);
+        printf("\n\n Please, try again.\n\n");
+        clearstdin();
     }
-
-    return var;
+    if (!var_number)
+        return 0;
+    else
+        return get_var_by_number(var_number - 1);
 }
 
 //===================================================================
@@ -707,16 +701,16 @@ int _diff_execute_single(struct Tree* tree, struct Tree* diff, FILE* tex,
     NODE_DIFF(tree->root, diff->root, var);
     tree_draw_graph(diff);
 
-    #ifdef DIFF_LATEX
+    //#ifdef DIFF_LATEX
 
         tree_latex_execute(diff, tex);
         TREE_SIMPLIFY_WITH_TEX(diff, tex);
 
-    #else 
+    //#else 
 
-        TREE_SIMPLIFY(diff);
+        //TREE_SIMPLIFY(diff);
 
-    #endif
+    //#endif
 
     return 0;
 }
@@ -766,15 +760,6 @@ int _diff_execute_all(struct Tree* tree, struct Tree* diff, FILE* tex,
 
 //===================================================================
 
-char _diff_menu(LOG_PARAMS) {
-
-    diff_log_report();
-
-
-}
-
-//===================================================================
-
 int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name, 
                                                                   LOG_PARAMS) {
 
@@ -785,7 +770,7 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
     print_vars(stdout);
     fflush(stdout);
 
-    #ifdef DIFF_LATEX
+    //#ifdef DIFF_LATEX
 
         FILE* tex = tree_latex_start(tree, tex_name);
         if (!tex)
@@ -794,24 +779,31 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
         tree_latex_execute(tree, tex);
         TREE_SIMPLIFY_WITH_TEX(tree, tex);
 
-    #else
+    //#else
 
-        TREE_SIMPLIFY(tree);
+        //TREE_SIMPLIFY(tree);
 
-    #endif
+    //#endif
 
-    char answer = diff_menu();
-    if (answer == -1)
-        return -1;
+    char answer = 0;
+    
+    if (get_vars_number() != 1) {
+            
+        answer = get_var_diff_by();
+        if (answer == -1)
+            return -1;
+    }
+    else 
+        answer = get_var_by_number(1);
 
     if (!answer) 
-        DIFF_EXECUTE_ALL(tree, diff, tex);
+        DIFF_EXECUTE_ALL(tree, diff, tex)
     else
-        DIFF_EXECUTE_SINGLE(tree, diff, tex, var);
+        DIFF_EXECUTE_SINGLE(tree, diff, tex, answer);
 
-    #ifdef DIFF_LATEX
+    //#ifdef DIFF_LATEX
         tree_latex_finish(tree);
-    #endif
+    //#endif
 
     return 0;
 }
@@ -949,18 +941,12 @@ static int _diff_operand_node(struct Node* orig, struct Node* diff, char var, LO
 
 //===================================================================
 
-#define L left_son
-
-#define R right_son
-
-//===================================================================
-
 static int _diff_operand_add_or_sub(struct Node* orig, struct Node* diff, 
                                           int oper, char var, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(orig);
-    NODE_PTR_CHECK(diff);            //занести init и add в один макрос
+    NODE_PTR_CHECK(diff);
 
     NODE_INIT_OPERAND(diff, (char)oper);
 

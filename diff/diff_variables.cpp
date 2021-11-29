@@ -46,7 +46,7 @@ int _print_vars(FILE* output, LOG_PARAMS) {
 
     for (int counter = 0; counter < Variables_counter; counter++)
 
-        fprintf(output, " %d). %c ", counter, Variables[counter]);
+        fprintf(output, " %d). %c ", counter + 1, Variables[counter]);
 
     return 0;
 }

@@ -8,6 +8,79 @@
 
 //===================================================================
 
+#define NODE_READ_FROM_BUFFER(node, buffer_struct) {                \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = node_read_from_buffer(node, buffer_struct);       \
+        if (ret == -1)                                              \
+            return -1;                                              \
+                                                                    \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define READ_NODE_DATA(node, buffer_struct) {                       \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = read_node_data(node, buffer_struct);              \
+        if (ret == -1)                                              \
+            return -1;                                              \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define READ_FUNCTION(node, buffer_struct) {                        \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = read_function(node, buffer_struct);               \
+        if (ret == -1)                                              \
+            return -1;                                              \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define READ_CONSTANT(node, buffer_struct) {                        \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = read_constant(node, buffer_struct);               \
+        if (ret == -1)                                              \
+            return -1;                                              \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define READ_CLOSING_BRACKET(buffer_struct) {                       \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = read_closing_bracket(buffer_struct);              \
+        if (ret == -1)                                              \
+            return -1;                                              \
+    } while(0);                                                     \
+}
+
+//-------------------------------------------------------------------
+
+#define READ_OPENING_BRACKET(buffer_struct) {                       \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int ret = read_opening_bracket(buffer_struct);              \
+        if (ret == -1)                                              \
+            return -1;                                              \
+    } while(0);                                                     \
+}
+
+//===================================================================
+
 #define NODE_INIT_CONSTANT(node, value) {                           \
                                                                     \
     do                                                              \
@@ -312,6 +385,18 @@
 
 //===================================================================
 
+// #ifdef DIFF_LATEX
+
+//     #define LATEX(file_ptr) file_ptr
+
+// #else
+
+//     #define LATEX(file_ptr) 
+
+// #endif
+
+//===================================================================
+
 #define DIFF_EXECUTE_SINGLE(tree, diff, tex, var) {                 \
                                                                     \
     do                                                              \
@@ -423,6 +508,12 @@ char* _diff_read_from_console(struct Tree* tree, LOG_PARAMS);
 
 int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 
+int _diff_execute_single(struct Tree* tree, struct Tree* diff, FILE* tex, 
+                                                    char var, LOG_PARAMS);
+
+int _diff_execute_all(struct Tree* tree, struct Tree* diff, FILE* tex, 
+                                                           LOG_PARAMS);
+
 //===================================================================
 
 #define diff_tree_ctor(tree) \
@@ -521,11 +612,16 @@ int _diff_copy_branch(struct Node* orig, struct Node* diff, LOG_PARAMS);
 #define get_var_diff_by() \
        _get_var_diff_by(LOG_ARGS)
 
-#define diff_menu() \
-       _diff_menu(LOG_ARGS)
-
 #define complex_diff_add_sum(diff_dest, node_sum, diff) \
        _complex_diff_add_sum(diff_dest, node_sum, diff, LOG_ARGS)
 
 #define node_is_constant(node, var) \
        _node_is_constant(node, var, LOG_ARGS)
+
+#define diff_execute_single(tree, diff, tex, var) \
+       _diff_execute_single(tree, diff, tex, var, LOG_ARGS)
+
+#define diff_execute_all(tree, diff, tex) \
+       _diff_execute_all(tree, diff, tex, LOG_ARGS)
+
+
