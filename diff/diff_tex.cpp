@@ -17,9 +17,111 @@ int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
         return -1;
     }
 
-    int ret = node_save_to_file(tree->root, tex);
+
+    fprintf(tex, "\n\n \\textbf{Original expression:}\n\n");
+
+    fprintf(tex, "\\begin{math}\n");
+
+    int ret = node_write_latex(tree->root, tex);
     if (ret == -1)
         return -1;
+
+    fprintf(tex, "\\end{math}\n");
+
+    fprintf(tex, "\n");
+
+    return 0;
+}
+
+//===================================================================
+
+int _print_latex_operand(struct Node* node, FILE* tex, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(node);
+
+    if (!tex) {
+
+        error_report(INV_FILE_PTR);
+        return -1;
+    }
+
+    
+
+    return 0;
+}
+
+//===================================================================
+
+int _print_latex_data(struct Node* node, FILE* tex, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(node);
+
+    if (!tex) {
+
+        error_report(INV_FILE_PTR);
+        return -1;
+    }
+
+    switch(node->data_type) {
+
+        case CONSTANT: {
+
+            fprintf(tex, "%g", node->data.constant);
+            break;
+        }
+
+        case VARIABLE: {
+
+            fprintf(tex, "%c", node->data.variable);
+            break;
+        }
+
+        case OPERAND: {
+
+            return print_latex_operand(node, tex);
+        }
+
+        default: {
+
+            error_report(DIFF_INV_DATA_TYPE);
+            break;
+        }
+    }
+
+    return 0;
+}
+
+//===================================================================
+
+int _node_write_latex(struct Node* node, FILE* tex, LOG_PARAMS) {
+
+    diff_log_report();
+    NODE_PTR_CHECK(node);
+
+    int is_terminating = 0;
+    if (!node->left_son && !node->right_son)
+        is_terminating = 1;
+    
+    if (!is_terminating) 
+        fprintf(tex, "(");
+
+    if (node->data_type == OPERAND && is_function_operand(node))
+        print_node_data(node, tex);
+
+    if (node->left_son)
+        node_write_latex(node->left_son, tex);
+
+    if (node->data_type != OPERAND
+    || (node->data_type == OPERAND && !is_function_operand(node)))
+        print_node_data(node, tex);
+
+    if (node->right_son)
+        node_write_latex(node->right_son, tex);
+
+    if (!is_terminating)
+        fprintf(tex, ")");
 
     return 0;
 }
@@ -105,13 +207,13 @@ int _call_latex(const char* tex_dest, LOG_PARAMS) {
                                                   LATEX_DIR, Tex_name, 
                                                   LATEX_DIR, tex_dest);
 
-    int ret =  system(buffer);
-    if (ret != 0)
-        return -1;
+    // int ret =  system(buffer);
+    // if (ret != 0)
+    //     return -1;
 
-    clean_buffer(buffer, System_cmnd_buf_size);
+    // clean_buffer(buffer, System_cmnd_buf_size);
 
-    sprintf(buffer, "evince %s", tex_dest);
+    // sprintf(buffer, "evince %s", tex_dest);
     return system(buffer);
 }
 

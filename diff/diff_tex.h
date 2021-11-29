@@ -18,7 +18,22 @@ FILE* _open_latex_file(const char* tex_name, LOG_PARAMS);
 
 int _call_latex(const char* tex_name, LOG_PARAMS);
 
+int _node_write_latex(struct Node* node, FILE* tex, LOG_PARAMS);
+
+int _print_latex_data(struct Node* node, FILE* tex, LOG_PARAMS);
+
+int _print_latex_operand(struct Node* node, FILE* tex, LOG_PARAMS);
+
 //===================================================================
+
+#define print_latex_operand(node, tex) \
+       _print_latex_operand(node, tex, LOG_ARGS)
+
+#define node_write_latex(node, tex) \
+       _node_write_latex(node, tex, LOG_ARGS)
+
+#define print_latex_data(node, tex) \
+       _print_latex_data(node, tex, LOG_ARGS)
 
 #define call_latex(tex_dest) \
        _call_latex(tex_dest, LOG_ARGS);

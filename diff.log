@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.26)  29 NOV 2021 15:13
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.11.26)  29 NOV 2021 17:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -512,62 +512,19 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 16.
 (/usr/share/texlive/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-! Missing $ inserted.
-<inserted text> 
-                $
-l.17  (  (  (  (  (  ( sin ( x )  ) ^
-                                      ( 3 )  ) - ( 2 )  ) / ( 10 )  ) * (  (...
-
-? vvhvh
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? 
 LaTeX Font Info:    Font shape `OML/cmr/m/up' in size <12> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 17.
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 21.
 LaTeX Font Info:    Font shape `OML/cmr/m/up' in size <8> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 17.
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 21.
 LaTeX Font Info:    Font shape `OML/cmr/m/up' in size <6> not available
-(Font)              Font shape `OML/cmm/m/it' tried instead on input line 17.
+(Font)              Font shape `OML/cmm/m/it' tried instead on input line 21.
 LaTeX Font Info:    Font shape `OMS/cmr/m/up' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 17.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 21.
 LaTeX Font Info:    Font shape `OMS/cmr/m/up' in size <8> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 17.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 21.
 LaTeX Font Info:    Font shape `OMS/cmr/m/up' in size <6> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 17.
-! Missing $ inserted.
-<inserted text> 
-                $
-l.17 ...^ ( 0.5 )  )  )  )  )  )  ) \end{document}
-                                                  
-? 
-
-Overfull \hbox (8.38747pt too wide) in paragraph at lines 17--17
-\OT1/cmr/m/n/12 (10))\OML/cmm/m/it/12 =\OT1/cmr/m/n/12 (100)) \OMS/cmsy/m/n/12 
-^^C \OT1/cmr/m/n/12 ((\OML/cmm/m/it/12 z\OT1/cmr/m/n/12 ) \OMS/cmsy/m/n/12 ^^@ 
-\OT1/cmr/m/n/12 (2))) \OMS/cmsy/m/n/12 ^^C \OT1/cmr/m/n/12 (\OML/cmm/m/it/12 ac
-os\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 y\OT1/cmr/m/n/12 ))) + (((((\OML/cmm/m/it/1
-2 sin\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 x\OT1/cmr/m/n/12 ))[]3)) \OMS/cmsy/m/n/1
-2 ^^@ \OT1/cmr/m/n/12 (2))\OML/cmm/m/it/12 =\OT1/cmr/m/n/12 (10)) \OMS/cmsy/m/n
-/12 ^^C \OT1/cmr/m/n/12 (\OML/cmm/m/it/12 acos\OT1/cmr/m/n/12 (\OML/cmm/m/it/12
- y\OT1/cmr/m/n/12 )))) +
- []
-
-
-Overfull \hbox (11.3269pt too wide) in paragraph at lines 17--17
-\OT1/cmr/m/n/12 (((((((((((0) \OMS/cmsy/m/n/12 ^^C \OT1/cmr/m/n/12 ((\OML/cmm/m
-/it/12 cos\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 x\OT1/cmr/m/n/12 )) \OMS/cmsy/m/n/1
-2 ^^C \OT1/cmr/m/n/12 (0))) \OMS/cmsy/m/n/12 ^^C \OT1/cmr/m/n/12 ((3) \OMS/cmsy
-/m/n/12 ^^C \OT1/cmr/m/n/12 ((\OML/cmm/m/it/12 sin\OT1/cmr/m/n/12 (\OML/cmm/m/i
-t/12 x\OT1/cmr/m/n/12 ))[]2)))) \OMS/cmsy/m/n/12 ^^@ \OT1/cmr/m/n/12 (0)) \OMS/
-cmsy/m/n/12 ^^C \OT1/cmr/m/n/12 (10)) \OMS/cmsy/m/n/12 ^^@ \OT1/cmr/m/n/12 ((((
-\OML/cmm/m/it/12 sin\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 x\OT1/cmr/m/n/12 ))[]3)) 
-\OMS/cmsy/m/n/12 ^^@
- []
-
-[1
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 21.
+ [1
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] (./diff.aux)
 
@@ -575,24 +532,25 @@ LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 4322 strings out of 481239
- 63155 string characters out of 5920376
- 296336 words of memory out of 5000000
- 19539 multiletter control sequences out of 15000+600000
- 545207 words of font info for 60 fonts, out of 8000000 for 9000
+ 4324 strings out of 481239
+ 63178 string characters out of 5920376
+ 293336 words of memory out of 5000000
+ 19540 multiletter control sequences out of 15000+600000
+ 546026 words of font info for 61 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 44i,6n,33p,2292b,235s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 44i,6n,33p,398b,235s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t2a.enc}</usr/share/texli
 ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr/share/texlive/tex
 mf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/share/texlive/texmf-dist/fonts/t
 ype1/public/amsfonts/cm/cmsy10.pfb></usr/share/texmf/fonts/type1/public/cm-supe
-r/sfrm1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1440.pfb></usr
-/share/texmf/fonts/type1/public/cm-super/sfrm2074.pfb>
-Output written on diff.pdf (1 page, 70265 bytes).
+r/sfbx1200.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1200.pfb></usr
+/share/texmf/fonts/type1/public/cm-super/sfrm1440.pfb></usr/share/texmf/fonts/t
+ype1/public/cm-super/sfrm2074.pfb>
+Output written on diff.pdf (1 page, 73653 bytes).
 PDF statistics:
- 37 PDF objects out of 1000 (max. 8388607)
- 26 compressed objects within 1 object stream
+ 41 PDF objects out of 1000 (max. 8388607)
+ 29 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  1 words of extra memory for PDF output out of 10000 (max. 10000000)
 
