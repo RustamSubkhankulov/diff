@@ -767,9 +767,6 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
     TREE_PTR_CHECK(tree);
     TREE_PTR_CHECK(diff);
 
-    print_vars(stdout);
-    fflush(stdout);
-
     //#ifdef DIFF_LATEX
 
         FILE* tex = tree_latex_start(tree, tex_name);
@@ -786,6 +783,15 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
     //#endif
 
     char answer = 0;
+
+    if (!get_vars_number()) {
+
+        NODE_INIT_CONSTANT(diff->root, 0);
+        tree_latex_add_conspect(diff, tex);
+        tree_latex_finish(tree, tex);
+
+        return 0;
+    }
     
     if (get_vars_number() != 1) {
             
@@ -802,7 +808,7 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
         DIFF_EXECUTE_SINGLE(tree, diff, tex, answer);
 
     //#ifdef DIFF_LATEX
-        tree_latex_finish(tree);
+        tree_latex_finish(tree, tex);
     //#endif
 
     return 0;

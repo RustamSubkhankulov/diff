@@ -19,7 +19,7 @@ int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
 
 //===================================================================
 
-int _tree_write_title(FILE* tex, LOG_PARAMS) {
+int _latex_write_title(FILE* tex, LOG_PARAMS) {
 
     diff_log_report();
 
@@ -58,6 +58,10 @@ FILE* _tree_latex_start(struct Tree* tree, const char* tex_name, LOG_PARAMS) {
     if (!tex)
         return NULL;
 
+    int ret = latex_write_title(tex);
+    if (ret == -1)
+        return NULL;
+
     return tex;
 }
 
@@ -74,7 +78,7 @@ int _tree_latex_add_conspect(struct Tree* tree, FILE* tex, LOG_PARAMS) {
 
 //===================================================================
 
-int _tree_latex_finish(struct Tree* tree, LOG_PARAMS) {
+int _tree_latex_finish(struct Tree* tree, FILE* tex, LOG_PARAMS) {
 
     TREE_PTR_CHECK(tree)
 
