@@ -2,6 +2,16 @@
 
 #include "../diff/diff.h"
 
+#define WRITE_NODE_IN_BRACKETS(node, output) {                        \
+                                                                      \
+       do                                                             \
+       {                                                              \
+              fprintf(tex, "{");                                      \
+              node_write_latex(node, output);                         \
+              fprintf(tex, "}");                                      \
+       } while(0);                                                    \
+}
+
 //===================================================================
 
 int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS);
@@ -13,6 +23,8 @@ int _tree_latex_add_conspect(struct Tree* tree, FILE* tex, LOG_PARAMS);
 int _tree_latex_finish(struct Tree* tree, FILE* tex, const char* tex_name, LOG_PARAMS);
 
 int _latex_write_title(FILE* tex, LOG_PARAMS);
+
+int are_brackets_needed(struct Node* node);
 
 FILE* _open_latex_file(const char* tex_name, LOG_PARAMS);
 

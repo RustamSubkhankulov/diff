@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "diff_tex.h"
 #include "../general/general.h"
@@ -17,8 +18,8 @@ int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
         return -1;
     }
 
-
-    fprintf(tex, "\n\n \\textbf{Original expression:}\n\n");
+    fprintf(tex, "\n\n\n \\textbf{Original expression "
+                               "before simplifying:}\n\n");
 
     fprintf(tex, "\\begin{math}\n");
 
@@ -26,7 +27,7 @@ int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
     if (ret == -1)
         return -1;
 
-    fprintf(tex, "\\end{math}\n");
+    fprintf(tex, "\n\\end{math}\n");
 
     fprintf(tex, "\n");
 
@@ -46,7 +47,40 @@ int _print_latex_operand(struct Node* node, FILE* tex, LOG_PARAMS) {
         return -1;
     }
 
-    
+    switch (node->data.operand) {
+
+        case ADD:  fprintf(tex, "+");         break;
+
+        case SUB:  fprintf(tex, "-");         break;
+
+        case MUL:  fprintf(tex, " \\cdot ");  break;
+
+        case DIV:  fprintf(tex, " \\frac ");  break;
+
+        case POW:  fprintf(tex, "^");         break;
+
+        case SIN:  fprintf(tex, "\\sin");     break;
+
+        case COS:  fprintf(tex, "\\cos");     break;
+
+        case  TG:  fprintf(tex, "\\tan");     break;
+
+        case CTG:  fprintf(tex, "\\cot");     break;
+
+        case ACOS: fprintf(tex, "\\arccos");  break;
+
+        case ASIN: fprintf(tex, "\\arrcsin"); break;
+
+        case  ATG: fprintf(tex, "\\arctan");  break;
+
+        case ACTG: fprintf(tex, "\\arccot");  break;
+
+        default: {
+
+            error_report(DIFF_INV_OPERAND);
+            return -1;
+        }
+    }
 
     return 0;
 }
@@ -95,32 +129,92 @@ int _print_latex_data(struct Node* node, FILE* tex, LOG_PARAMS) {
 
 //===================================================================
 
+int are_brackets_needed(struct Node* node) {
+
+    struct Node* parent = node->parent;
+    struct Node* left   = node->left_son;
+    struct Node* right  = node->right_son;
+
+    if ((!left && !right && !is_function_operand(parent))
+    ||   (node->data_type == OPERAND 
+    &&   (is_function_operand(node) || node->data.operand == DIV))){
+
+        return 1;
+    }
+
+    if (parent == No_parent
+    || (parent != No_parent 
+    &&  parent->data_type == OPERAND 
+    &&  parent->data.operand == DIV)){
+
+        return 1;
+    }
+
+    if  (node->data_type == OPERAND
+    &&  (is_function_operand(node)
+    ||  node->data.operand == MUL
+    ||  node->data.operand == DIV
+    ||  node->data.operand == POW)
+    &&  parent             != No_parent 
+    &&  parent->data_type == OPERAND
+    && (parent->data.operand == ADD
+    ||  parent->data.operand == SUB)){
+
+        return 1;
+    }
+
+    if (node->data_type == OPERAND
+    &&  node->data.operand == POW){
+
+        return 1;
+    }
+
+    return 0;
+}
+
+//===================================================================
+
 int _node_write_latex(struct Node* node, FILE* tex, LOG_PARAMS) {
 
     diff_log_report();
     NODE_PTR_CHECK(node);
 
-    int is_terminating = 0;
-    if (!node->left_son && !node->right_son)
-        is_terminating = 1;
-    
-    if (!is_terminating) 
+    int no_brackets = are_brackets_needed(node);
+    int children_in_brackets = 0;
+
+    if (!no_brackets) 
         fprintf(tex, "(");
 
-    if (node->data_type == OPERAND && is_function_operand(node))
-        print_node_data(node, tex);
+    if (node->data_type == OPERAND 
+    && (is_function_operand(node) 
+    ||  node->data.operand == DIV))
+    
+        print_latex_data(node, tex);
 
-    if (node->left_son)
-        node_write_latex(node->left_son, tex);
+    if (node->left_son) {
+
+        if (children_in_brackets)
+            WRITE_NODE_IN_BRACKETS(node->left_son, tex)
+        else
+            node_write_latex(node->left_son, tex);
+    }
 
     if (node->data_type != OPERAND
-    || (node->data_type == OPERAND && !is_function_operand(node)))
-        print_node_data(node, tex);
+    || (node->data_type == OPERAND 
+    &&  node->data.operand != DIV 
+    && !is_function_operand(node)))
 
-    if (node->right_son)
-        node_write_latex(node->right_son, tex);
+        print_latex_data(node, tex);
 
-    if (!is_terminating)
+    if (node->right_son) {
+
+        if (children_in_brackets)
+            WRITE_NODE_IN_BRACKETS(node->right_son, tex)
+        else
+            node_write_latex(node->right_son, tex);
+    }
+
+    if (!no_brackets)
         fprintf(tex, ")");
 
     return 0;
@@ -150,10 +244,11 @@ int _latex_write_title(FILE* tex, LOG_PARAMS) {
     fprintf(tex, "\\usepackage{amsfonts}\n");
     fprintf(tex, "\\usepackage{amsmath}\n");
     fprintf(tex, "\\title{Semester work in mathematical analysis}\n");
-    fprintf(tex, "\\author{Rustam Subkhankulov \thanks{sponsored By A.Y.Petrovich}}\n");
+    fprintf(tex, "\\author{Rustam Subkhankulov \\thanks{sponsored By A.Y.Petrovich}}\n");
     fprintf(tex, "\\date{November 2021}\n");
     fprintf(tex, "\\begin{document} \n");
     fprintf(tex, "\\maketitle\n");
+    fprintf(tex, "\\newpage\n");
 
     return 0;
 }
@@ -192,6 +287,26 @@ int _tree_latex_add_conspect(struct Tree* tree, FILE* tex, LOG_PARAMS) {
     TREE_PTR_CHECK(tree);
     if (!tex)
         return -1;
+
+    srand((unsigned)clock());
+
+    int random__first  = rand() % 10;
+    int random__second = rand() % 100;
+
+    fprintf(tex, "\n\n\n \\textbf{Using %d.%d theorema"
+                               " we will have:}\n\n", random__first, 
+                                                      random__second);
+
+    fprintf(tex, "\\begin{math}\n");
+
+    int ret = node_write_latex(tree->root, tex);
+    if (ret == -1)
+        return -1;
+
+    fprintf(tex, "\n\\end{math}\n");
+
+    fprintf(tex, "\n");
+
 
     return 0;
 }
