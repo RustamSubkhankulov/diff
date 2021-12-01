@@ -5,7 +5,13 @@
 #include "diff_tex.h"
 #include "../general/general.h"
 
+//===================================================================
+
 const char* Tex_name = "diff.tex";
+
+#define R right_son
+
+#define L left_son
 
 //===================================================================
 
@@ -20,17 +26,13 @@ int  _tree_latex_execute(struct Tree* tree, FILE* tex, const char* phrase,
     }
 
     fprintf(tex, "\n\n\n \\textbf{%s:}\n\n", phrase);
-
     fprintf(tex, "\\begin{math}\n");
 
     int ret = node_write_latex(tree->root, tex);
     if (ret == -1)
         return -1;
 
-    fprintf(tex, "\n\\end{math} \n \\\\ \n");
-
-    fprintf(tex, "\n");
-
+    fprintf(tex, "\n\\end{math} \n \\\\ \n\n");
     return 0;
 }
 
@@ -154,14 +156,15 @@ int are_brackets_needed(struct Node* node) {
     struct Node* right  = node->right_son;
 
     if ((!left && !right && !is_function_operand(parent))
-    ||   (node->data_type == OPERAND 
-    &&   (is_function_operand(node) || node->data.operand == DIV)))
+    ||   (IS_OPER(node)
+    &&   (is_function_operand(node) 
+    ||   node->data.operand == DIV)))
 
         return 1;
     
-    if (node->data_type   == OPERAND
-    &&  parent            != No_parent
-    &&  parent->data_type == OPERAND
+    if (IS_OPER(node)
+    &&  parent != No_parent
+    &&  IS_OPER(parent)
     &&  operand_priority(node) 
     ==  operand_priority(parent))
 
@@ -169,21 +172,21 @@ int are_brackets_needed(struct Node* node) {
 
     if (parent == No_parent
     || (parent != No_parent 
-    &&  parent->data_type == OPERAND 
+    &&  IS_OPER(parent)
     &&  parent->data.operand == DIV))
 
         return 1;
 
-    if  (node->data_type == OPERAND
+    if  (IS_OPER(node)
     &&  (is_function_operand(node)
     ||  operand_priority(node) == 1)
     &&  parent != No_parent 
-    &&  parent->data_type == OPERAND
+    &&  IS_OPER(parent)
     &&  operand_priority(parent) == 2)
 
         return 1;
 
-    if (node->data_type == OPERAND
+    if (IS_OPER(node)
     &&  node->data.operand == POW)
 
         return 1;
@@ -201,7 +204,8 @@ int _node_write_latex(struct Node* node, FILE* tex, LOG_PARAMS) {
     int no_brackets = are_brackets_needed(node);
 
     int children_in_brackets = 0;
-    if (node->data_type == OPERAND 
+
+    if (IS_OPER(node)
     &&  node->data.operand == DIV)
 
         children_in_brackets = 1;
@@ -209,33 +213,33 @@ int _node_write_latex(struct Node* node, FILE* tex, LOG_PARAMS) {
     if (!no_brackets) 
         fprintf(tex, "(");
 
-    if (node->data_type == OPERAND 
+    if (IS_OPER(node) 
     && (is_function_operand(node) 
     ||  node->data.operand == DIV))
     
         print_latex_data(node, tex);
 
-    if (node->left_son) {
+    if (node->L) {
 
         if (children_in_brackets)
-            WRITE_NODE_IN_BRACKETS(node->left_son, tex)
+            WRITE_NODE_IN_BRACKETS(node->L, tex)
         else
-            node_write_latex(node->left_son, tex);
+            node_write_latex(node->L, tex);
     }
 
-    if (node->data_type != OPERAND
-    || (node->data_type == OPERAND 
+    if (!IS_OPER(node)
+    || ( IS_OPER(node) 
     &&  node->data.operand != DIV 
     && !is_function_operand(node)))
 
         print_latex_data(node, tex);
 
-    if (node->right_son) {
+    if (node->R) {
 
         if (children_in_brackets)
-            WRITE_NODE_IN_BRACKETS(node->right_son, tex)
+            WRITE_NODE_IN_BRACKETS(node->R, tex)
         else
-            node_write_latex(node->right_son, tex);
+            node_write_latex(node->R, tex);
     }
 
     if (!no_brackets)

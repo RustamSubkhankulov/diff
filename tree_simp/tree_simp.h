@@ -47,6 +47,22 @@ int _tree_simplify(struct Tree* diff, LOG_PARAMS);
 
 //===================================================================
 
+#define DESTRUCT_BRANCH(node) {                                     \
+                                                                    \
+    do                                                              \
+    {                                                               \
+        int is_destructed = node_visiter(node, _node_destruct);     \
+        if (is_destructed == -1)                                    \
+            return -1;                                              \
+    } while(0);                                                     \
+}                                   
+
+#define IS_CONST(node) (node->data_type == CONSTANT)
+#define IS_OPER(node)  (node->data_type == OPERAND)
+#define IS_VAR(node)   (node->data_type == VARIABLE)
+
+//===================================================================
+
 #define tree_simplify(diff) \
        _tree_simplify(diff, LOG_ARGS)
 

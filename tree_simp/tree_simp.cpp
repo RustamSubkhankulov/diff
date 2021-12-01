@@ -24,6 +24,12 @@ static int _cut_constant(struct Tree* diff, struct Node** node, struct Node* cut
 
 //===================================================================
 
+#define L left_son
+
+#define R right_son
+
+//===================================================================
+
 int _tree_simplify(struct Tree* diff, LOG_PARAMS) {
 
     diff_log_report();              
@@ -49,8 +55,8 @@ static int _calc_operand_value(struct Node* node, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(node);
 
-    double first_value  = node->left_son ->data.constant;
-    double second_value = node->right_son->data.constant;
+    double first_value  = node->L->data.constant;
+    double second_value = node->R->data.constant;
 
     double result = 0;
 
@@ -99,20 +105,13 @@ static int _calc_operand_value(struct Node* node, LOG_PARAMS) {
         }
     }
 
-    int ret = node_init_constant(node, result);
-    if (ret == -1)
-        return -1;
+    NODE_INIT_CONSTANT(node, result);
 
-    ret = node_visiter(node->left_son,  _node_destruct);
-    if (ret == -1)
-        return -1;
+    DESTRUCT_BRANCH(node->L);
+    DESTRUCT_BRANCH(node->R);
 
-    ret = node_visiter(node->right_son, _node_destruct);
-    if (ret == -1)
-        return -1;
-
-    node->left_son  = NULL;
-    node->right_son = NULL;
+    node->L = NULL;
+    node->R = NULL;
 
     return 1;
 }
@@ -124,7 +123,7 @@ static int _calc_function_value(struct Node* node, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(node);
 
-    double arg = node->left_son->data.constant;
+    double arg = node->L->data.constant;
     double result = 0;
 
     switch (node->data.operand) {
@@ -184,15 +183,10 @@ static int _calc_function_value(struct Node* node, LOG_PARAMS) {
         }
     }
 
-    int ret = node_init_constant(node, result);
-    if (ret == -1)
-        return -1;
+    NODE_INIT_CONSTANT(node, result);
 
-    ret = node_visiter(node->left_son, _node_destruct);
-    if (ret == -1)
-        return -1;
-
-    node->left_son  = NULL;
+    DESTRUCT_BRANCH(node->L);
+    node->L = NULL;
 
     return 1;
 }
@@ -207,9 +201,9 @@ static int _constant_folding(struct Node* node, LOG_PARAMS) {
     int ret = 0;
     int is_simplified = 0;
 
-    if (node->left_son) {
+    if (node->L) {
 
-        ret = constant_folding(node->left_son);
+        ret = constant_folding(node->L);
         if (ret == -1)
             return -1;
 
@@ -217,9 +211,9 @@ static int _constant_folding(struct Node* node, LOG_PARAMS) {
             is_simplified++;
     }
 
-    if (node->right_son) {
+    if (node->R) {
 
-        ret = constant_folding(node->right_son);
+        ret = constant_folding(node->R);
         if (ret == -1)
             return -1;
 
@@ -227,10 +221,10 @@ static int _constant_folding(struct Node* node, LOG_PARAMS) {
             is_simplified++;
     }
 
-    if (node->data_type == OPERAND 
+    if (IS_OPER(node) 
      && !is_function_operand(node)
-     && node->left_son ->data_type == CONSTANT 
-     && node->right_son->data_type == CONSTANT) {
+     && IS_CONST(node->L) 
+     && IS_CONST(node->R)) {
 
         ret = calc_operand_value(node);
         if (ret == -1)
@@ -240,10 +234,10 @@ static int _constant_folding(struct Node* node, LOG_PARAMS) {
             is_simplified++;
     }
 
-    if (node->data_type == OPERAND
+    if (IS_OPER(node)
     && is_function_operand(node)
-    && node->left_son != NULL
-    && node->left_son->data_type == CONSTANT) {
+    && node->L != NULL
+    && IS_CONST(node->L)) {
 
         ret = calc_function_value(node);
         if (ret == -1)
@@ -264,15 +258,15 @@ static Node* _is_zero_node(struct Node* node, LOG_PARAMS) {
     if (!node)
         return NULL;
 
-    if (node->left_son 
-     && node->left_son->data_type == CONSTANT 
-     && double_is_equal(node->left_son->data.constant, 0))
-        return node->left_son;
+    if (node->L
+     && IS_CONST(node->L)
+     && double_is_equal(node->L->data.constant, 0))
+        return node->L;
     
-    if (node->right_son
-     && node->right_son->data_type == CONSTANT 
-     && double_is_equal(node->right_son->data.constant, 0))
-        return node->right_son;
+    if (node->R
+     && IS_CONST(node->R)
+     && double_is_equal(node->R->data.constant, 0))
+        return node->R;
 
     return NULL;
 }
@@ -285,15 +279,15 @@ static Node* _is_one_node(struct Node* node, LOG_PARAMS) {
     if (!node)
         return NULL;
 
-    if (node->left_son
-     && node->left_son->data_type == CONSTANT 
-     && double_is_equal(node->left_son->data.constant, 1))
-        return node->left_son;
+    if (node->L
+     && IS_CONST(node->L)
+     && double_is_equal(node->L->data.constant, 1))
+        return node->L;
     
-    if (node->right_son
-     && node->right_son->data_type == CONSTANT 
-     && double_is_equal(node->right_son->data.constant, 1))
-        return node->right_son;
+    if (node->R
+     && IS_CONST(node->R) 
+     && double_is_equal(node->R->data.constant, 1))
+        return node->R;
 
     return NULL;
 }
@@ -305,20 +299,13 @@ static int _replace_with_const(struct Node* node, double constant, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(node);
 
-    int ret = node_visiter(node->left_son, _node_destruct);
-    if (ret == -1)
-        return -1;
-    
-    ret = node_visiter(node->right_son, _node_destruct);
-    if (ret == -1)
-        return -1;
+    DESTRUCT_BRANCH(node->L);
+    DESTRUCT_BRANCH(node->R);
 
-    ret = node_init_constant(node, constant);
-    if (ret == -1)
-        return -1;
+    node->L = NULL;
+    node->R = NULL;
 
-    node->left_son  = NULL;
-    node->right_son = NULL;
+    NODE_INIT_CONSTANT(node, constant);
 
     return 1;
 }
@@ -333,13 +320,12 @@ static int _cut_constant(struct Tree* diff, struct Node** node_ptr, struct Node*
     TREE_PTR_CHECK(diff);
 
     struct Node* node = *node_ptr;
-
     struct Node* expression = NULL;
 
-    if (node->left_son != cutted)
-        expression = node->left_son;
+    if (node->L != cutted)
+        expression = node->L;
     else 
-        expression = node->right_son;
+        expression = node->R;
 
     *node_ptr = expression;
     (*node_ptr)->parent = node->parent;
@@ -353,11 +339,8 @@ static int _cut_constant(struct Tree* diff, struct Node** node_ptr, struct Node*
     else if (node == node->parent->right_son)
         node->parent->right_son = expression;
 
-    int ret = node_visiter(cutted, _node_destruct);
-    if (ret == -1)
-        return -1;
-
-    ret = node_destruct(node);
+    DESTRUCT_BRANCH(cutted);
+    int ret = node_destruct(node);
     if (ret == -1)
         return -1;
 
@@ -392,7 +375,7 @@ static Node* _mul_by_one_simp_check(struct Node* node, LOG_PARAMS) {
 
     struct Node* returning = NULL;
 
-    if  (node->data_type    == OPERAND 
+    if  (IS_OPER(node) 
     &&   node->data.operand == MUL 
     &&  (returning = is_one_node(node)))
 
@@ -411,7 +394,7 @@ static Node* _sum_with_zero_simp_check(struct Node* node, LOG_PARAMS) {
 
     struct Node* returning = NULL;
 
-    if (node->data_type    == OPERAND
+    if (IS_OPER(node)
     && (node->data.operand == ADD
     ||  node->data.operand == SUB)
     && (returning = is_zero_node(node)))
@@ -431,7 +414,7 @@ static Node* _pow_one_simp_check(struct Node* node, LOG_PARAMS) {
 
     struct Node* returning = NULL;
 
-    if (node->data_type    == OPERAND
+    if (IS_OPER(node)
     &&  node->data.operand == POW
     && (returning = is_one_node(node)))
 
@@ -447,7 +430,7 @@ static int _pow_zero_simp_check(struct Node* node, LOG_PARAMS) {
     diff_log_report();
     NODE_PTR_CHECK(node);
 
-    if (node->data_type    == OPERAND
+    if (IS_OPER(node)
     &&  node->data.operand == POW
     &&  is_zero_node(node))
 
@@ -470,9 +453,9 @@ static int _cut_nodes(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) {
     int ret = 0;
     struct Node* cutted = NULL;
 
-    if (node->left_son) {
+    if (node->L) {
 
-        ret = cut_nodes(diff, &(node->left_son));
+        ret = cut_nodes(diff, &(node->L));
         if (ret == -1)
             return -1;
 
@@ -480,9 +463,9 @@ static int _cut_nodes(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) {
             is_simplified++;
     }
 
-    if (node->right_son) {
+    if (node->R) {
 
-        ret = cut_nodes(diff, &(node->right_son));
+        ret = cut_nodes(diff, &(node->R));
         if (ret == -1)
             return -1;
 
@@ -545,3 +528,6 @@ static int _cut_nodes(struct Tree* diff, struct Node** node_ptr, LOG_PARAMS) {
 }
 
 //===================================================================
+
+#undef R
+#undef L
