@@ -701,16 +701,9 @@ int _diff_execute_single(struct Tree* tree, struct Tree* diff, FILE* tex,
     NODE_DIFF(tree->root, diff->root, var);
     tree_draw_graph(diff);
 
-    //#ifdef DIFF_LATEX
-
-        tree_latex_execute(diff, tex);
-        TREE_SIMPLIFY_WITH_TEX(diff, tex);
-
-    //#else 
-
-        //TREE_SIMPLIFY(diff);
-
-    //#endif
+    fprintf(tex, "\n \\textbf{Differentiation by %c}\n", var);
+    latex_show_derivative (diff, tex);
+    TREE_SIMPLIFY_WITH_TEX(diff, tex);
 
     return 0;
 }
@@ -737,16 +730,9 @@ int _diff_execute_all(struct Tree* tree, struct Tree* diff, FILE* tex,
 
         tree_draw_graph(diff);
 
-        #ifdef DIFF_LATEX
-
-            tree_latex_execute(diff, tex);
-            TREE_SIMPLIFY_WITH_TEX(diff, tex);
-
-        #else 
-
-            TREE_SIMPLIFY(diff);
-
-        #endif
+        fprintf(tex, "\n \\textbf{Differentiation by %c}\n", var);
+        latex_show_derivative(diff, tex);
+        TREE_SIMPLIFY_WITH_TEX(diff, tex);
 
         if (!counter)    
             sum_node = diff->root;
@@ -767,20 +753,13 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
     TREE_PTR_CHECK(tree);
     TREE_PTR_CHECK(diff);
 
-    //#ifdef DIFF_LATEX
+    FILE* tex = tree_latex_start(tree);
+    if (!tex)
+        return -1;
 
-        FILE* tex = tree_latex_start(tree);
-        if (!tex)
-            return -1;
-
-        tree_latex_execute(tree, tex);
-        TREE_SIMPLIFY_WITH_TEX(tree, tex);
-
-    //#else
-
-        //TREE_SIMPLIFY(tree);
-
-    //#endif
+    tree_latex_original_expr(tree, tex);
+    TREE_SIMPLIFY_WITH_TEX(tree, tex);
+    tree_latex_original_after_simp(tree, tex);
 
     char answer = 0;
 
@@ -807,9 +786,7 @@ int _diff_execute(struct Tree* tree, struct Tree* diff, const char* tex_name,
     else
         DIFF_EXECUTE_SINGLE(tree, diff, tex, answer);
 
-    //#ifdef DIFF_LATEX
-        tree_latex_finish(tree, tex, tex_name);
-    //#endif
+    tree_latex_finish(diff, tex, tex_name);
 
     return 0;
 }

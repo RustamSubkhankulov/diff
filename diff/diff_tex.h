@@ -2,6 +2,8 @@
 
 #include "../diff/diff.h"
 
+//===================================================================
+
 #define WRITE_NODE_IN_BRACKETS(node, output) {                        \
                                                                       \
        do                                                             \
@@ -9,12 +11,26 @@
               fprintf(tex, "{");                                      \
               node_write_latex(node, output);                         \
               fprintf(tex, "}");                                      \
+                                                                      \
        } while(0);                                                    \
 }
 
 //===================================================================
 
-int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS);
+#define tree_latex_original_expr(tree, tex) \
+       _tree_latex_execute(tree, tex, "Original expression before simplifying", LOG_ARGS)
+
+#define tree_latex_original_after_simp(tree, tex) \
+       _tree_latex_execute(tree, tex, "Receiving signals from space, we get " \
+                                      "an intermediate result after simplification", LOG_ARGS)
+
+#define latex_show_derivative(diff, tex) \
+       _tree_latex_execute(diff, tex, "Derivative is: ", LOG_ARGS)
+
+//===================================================================
+
+int  _tree_latex_execute(struct Tree* tree, FILE* tex, const char* phrase, 
+                                                              LOG_PARAMS);
 
 FILE*  _tree_latex_start(struct Tree* tree, LOG_PARAMS);
 
@@ -56,8 +72,8 @@ int _print_latex_operand(struct Node* node, FILE* tex, LOG_PARAMS);
 #define latex_write_title(tex) \
        _latex_write_title(tex, LOG_ARGS)
 
-#define tree_latex_execute(tree, tex_name) \
-       _tree_latex_execute(tree, tex_name, LOG_ARGS)
+#define tree_latex_execute(tree, tex, phrase) \
+       _tree_latex_execute(tree, tex, phrase, LOG_ARGS)
 
 #define tree_latex_start(tree) \
        _tree_latex_start(tree, LOG_ARGS)    

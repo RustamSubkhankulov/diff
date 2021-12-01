@@ -9,7 +9,8 @@ const char* Tex_name = "diff.tex";
 
 //===================================================================
 
-int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
+int  _tree_latex_execute(struct Tree* tree, FILE* tex, const char* phrase, 
+                                                               LOG_PARAMS) {
 
     TREE_PTR_CHECK(tree);
     if (tex == NULL) {
@@ -18,8 +19,7 @@ int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
         return -1;
     }
 
-    fprintf(tex, "\n\n\n \\textbf{Original expression "
-                               "before simplifying:}\n\n");
+    fprintf(tex, "\n\n\n \\textbf{%s:}\n\n", phrase);
 
     fprintf(tex, "\\begin{math}\n");
 
@@ -27,7 +27,7 @@ int  _tree_latex_execute(struct Tree* tree, FILE* tex, LOG_PARAMS) {
     if (ret == -1)
         return -1;
 
-    fprintf(tex, "\n\\end{math}\n");
+    fprintf(tex, "\n\\end{math} \n \\\\ \n");
 
     fprintf(tex, "\n");
 
@@ -129,6 +129,24 @@ int _print_latex_data(struct Node* node, FILE* tex, LOG_PARAMS) {
 
 //===================================================================
 
+static int operand_priority(struct Node* node) {
+
+    if (node->data.operand == ADD
+    ||  node->data.operand == SUB)
+
+        return 2;
+
+    if (node->data.operand == MUL
+    ||  node->data.operand == DIV
+    ||  node->data.operand == POW)
+
+        return 1;
+
+    return 0;
+}
+
+//===================================================================
+
 int are_brackets_needed(struct Node* node) {
 
     struct Node* parent = node->parent;
@@ -137,37 +155,38 @@ int are_brackets_needed(struct Node* node) {
 
     if ((!left && !right && !is_function_operand(parent))
     ||   (node->data_type == OPERAND 
-    &&   (is_function_operand(node) || node->data.operand == DIV))){
+    &&   (is_function_operand(node) || node->data.operand == DIV)))
 
         return 1;
-    }
+    
+    if (node->data_type   == OPERAND
+    &&  parent            != No_parent
+    &&  parent->data_type == OPERAND
+    &&  operand_priority(node) 
+    ==  operand_priority(parent))
+
+        return 1;
 
     if (parent == No_parent
     || (parent != No_parent 
     &&  parent->data_type == OPERAND 
-    &&  parent->data.operand == DIV)){
+    &&  parent->data.operand == DIV))
 
         return 1;
-    }
 
     if  (node->data_type == OPERAND
     &&  (is_function_operand(node)
-    ||  node->data.operand == MUL
-    ||  node->data.operand == DIV
-    ||  node->data.operand == POW)
-    &&  parent             != No_parent 
+    ||  operand_priority(node) == 1)
+    &&  parent != No_parent 
     &&  parent->data_type == OPERAND
-    && (parent->data.operand == ADD
-    ||  parent->data.operand == SUB)){
+    &&  operand_priority(parent) == 2)
 
         return 1;
-    }
 
     if (node->data_type == OPERAND
-    &&  node->data.operand == POW){
+    &&  node->data.operand == POW)
 
         return 1;
-    }
 
     return 0;
 }
@@ -180,7 +199,12 @@ int _node_write_latex(struct Node* node, FILE* tex, LOG_PARAMS) {
     NODE_PTR_CHECK(node);
 
     int no_brackets = are_brackets_needed(node);
+
     int children_in_brackets = 0;
+    if (node->data_type == OPERAND 
+    &&  node->data.operand == DIV)
+
+        children_in_brackets = 1;
 
     if (!no_brackets) 
         fprintf(tex, "(");
@@ -294,8 +318,9 @@ int _tree_latex_add_conspect(struct Tree* tree, FILE* tex, LOG_PARAMS) {
     int random__second = rand() % 100;
 
     fprintf(tex, "\n\n\n \\textbf{Using %d.%d theorema"
-                               " we will have:}\n\n", random__first, 
-                                                      random__second);
+                 " we will have that derivative is:}\n\n", 
+                                            random__first, 
+                                          random__second);
 
     fprintf(tex, "\\begin{math}\n");
 
@@ -303,7 +328,7 @@ int _tree_latex_add_conspect(struct Tree* tree, FILE* tex, LOG_PARAMS) {
     if (ret == -1)
         return -1;
 
-    fprintf(tex, "\n\\end{math}\n");
+    fprintf(tex, "\n\\end{math} \\\\ \n");
 
     fprintf(tex, "\n");
 
@@ -318,17 +343,9 @@ int _call_latex(const char* tex_dest, LOG_PARAMS) {
     diff_log_report();
 
     char buffer[System_cmnd_buf_size] = { 0 };
-    sprintf(buffer, "pdflatex %s%s -output-directory=%s%s >/dev/null", 
+    sprintf(buffer, "pdflatex %s%s -output-directory=%s%s ", 
                                                   LATEX_DIR, Tex_name, 
                                                   LATEX_DIR, tex_dest);
-
-    // int ret =  system(buffer);
-    // if (ret != 0)
-    //     return -1;
-
-    // clean_buffer(buffer, System_cmnd_buf_size);
-
-    // sprintf(buffer, "evince %s", tex_dest);
     return system(buffer);
 }
 
@@ -345,9 +362,17 @@ int _tree_latex_finish(struct Tree* tree, FILE* tex, const char* tex_dest,
         return -1;
     }
 
+    fprintf(tex, "\n\n\\textbf{Results after diffferentiation and simplification:}");
+    fprintf(tex, "\n \\begin{math}\n");
+
+    int ret = node_write_latex(tree->root, tex);
+    if (ret == -1)
+        return -1;
+
+    fprintf(tex, "\n \\end{math}\n");
     fprintf(tex, "\\end{document}\n");
 
-    int ret = close_file(tex);
+    ret = close_file(tex);
     if (ret == -1)
         return -1;
 
