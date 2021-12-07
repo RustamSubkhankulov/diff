@@ -347,7 +347,7 @@ int _call_latex(const char* tex_dest, LOG_PARAMS) {
     diff_log_report();
 
     char buffer[System_cmnd_buf_size] = { 0 };
-    sprintf(buffer, "pdflatex %s%s -output-directory=%s%s ", 
+    sprintf(buffer, "pdflatex %s%s -output-directory=%s%s >/dev/null", 
                                                   LATEX_DIR, Tex_name, 
                                                   LATEX_DIR, tex_dest);
     return system(buffer);

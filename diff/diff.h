@@ -441,7 +441,7 @@ struct Function {
 
 const static struct Function Functions[] {
 
-       { 7563630   , 3141473398, "sin"  },
+       { 7563630   , 3141473398, "sin"  }, //hash("sin")
        { 6516595   , 2519927297, "cos"  },
        { 29799     , 1173106379, "tg"   },
        { 6517863   , 3865010701, "ctg"  },
@@ -483,7 +483,6 @@ const int Operands[Operands_number] = {ADD , SUB , MUL, DIV, POW,
 //===================================================================
 
 enum Node_add_parameters {
-
     LEFT   = 1488,
     RIGHT  = 1489
 };
